@@ -137,7 +137,8 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-        bus.complete(e, result);
+        // TODO: Figure out with messageBusImpl's complete
+        return 0;
     }
 
     /**
@@ -171,7 +172,7 @@ public abstract class MicroService implements Runnable {
         initialize();
         while (!terminated) {
             try {
-                Massage msg = bus.awaitMessage(this);
+                Message msg = bus.awaitMessage(this);
                 if (msg != null) {
                     if (msg instanceof Event) {
 
