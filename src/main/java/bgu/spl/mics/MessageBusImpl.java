@@ -18,6 +18,7 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> mServiceMsgsQs;
 	private ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventSubsMap;
 	private ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentSkipListSet<MicroService>> broadcastSubMap;
+	private ConcurrentHashMap<Event, Future> eventFutureMap;
 
 	private MessageBusImpl() {
 		mServiceMsgsQs = new ConcurrentHashMap<>();
@@ -54,8 +55,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		// TODO: Figure out with microService's complete
-		return 0;
+		Future<T> f = eventFutureMap.get(e);
+		f.resolve(result);
+		eventFutureMap.remove(e);
 	}
 
 	@Override
@@ -76,8 +78,9 @@ public class MessageBusImpl implements MessageBus {
 		mServiceMsgQ.add(e);
 		subbedMServices.add(m); // return the mService to the back of the queue
 
-		// TODO: dont know what to return;
-		return;
+		Future<T> f = new Future<>();
+		eventFutureMap.put(e, f);
+		return f;
 	}
 
 	@Override

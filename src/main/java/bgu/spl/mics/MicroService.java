@@ -38,6 +38,7 @@ public abstract class MicroService implements Runnable {
         this.name = name;
         this.events = new ConcurrentHashMap<>();
         this.broadcasts = new ConcurrentHashMap<>();
+        this.bus = MessageBusImpl.getInstance();
     }
 
     /**
@@ -137,8 +138,7 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-        // TODO: Figure out with messageBusImpl's complete
-        return 0;
+        bus.complete(e, result);
     }
 
     /**
