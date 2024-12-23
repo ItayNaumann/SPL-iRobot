@@ -8,6 +8,10 @@ import bgu.spl.mics.MicroService;
  */
 public class TimeService extends MicroService {
 
+    // Fields
+    int TickTime;
+    int Duration;
+
     /**
      * Constructor for TimeService.
      *
@@ -16,7 +20,8 @@ public class TimeService extends MicroService {
      */
     public TimeService(int TickTime, int Duration) {
         super("Change_This_Name");
-        // TODO Implement this
+        this.TickTime = TickTime;
+        this.Duration = Duration;
     }
 
     /**
@@ -25,6 +30,23 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        // Need to make sure it runs smoothly otherwise we could wait longer than expected
+        try{
+            wait();
+            while(Duration > 0){
+                try{
+                    Thread.sleep(TickTime);
+                    sendBroadcast(new TickBroadcast());
+                    Duration--;
+                }
+                catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+            notifyAll();
+        }
+        catch(InterruptedException e){
+            e.printStackTrace();
+        }
     }
 }
