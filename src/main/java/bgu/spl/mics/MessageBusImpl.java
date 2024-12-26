@@ -12,7 +12,13 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 public class MessageBusImpl implements MessageBus {
 
-	private static MessageBusImpl instance = null;
+	private static class MessageBusImplHolder {
+		private static MessageBusImpl instance = new MessageBusImpl();
+	}
+
+	public static MessageBusImpl getInstance() {
+		return MessageBusImplHolder.instance;
+	}
 
 	private ConcurrentHashMap<MicroService, ConcurrentSkipListSet<Class<? extends Message>>> mServiceSubs;
 	private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> mServiceMsgsQs;
@@ -26,13 +32,6 @@ public class MessageBusImpl implements MessageBus {
 		broadcastSubMap = new ConcurrentHashMap<>();
 		eventFutureMap = new ConcurrentHashMap<>();
 		eventSubsMap = new ConcurrentHashMap<>();
-	}
-
-	public static MessageBusImpl getInstance() {
-		if (instance == null) {
-			instance = new MessageBusImpl();
-		}
-		return instance;
 	}
 
 	@Override
