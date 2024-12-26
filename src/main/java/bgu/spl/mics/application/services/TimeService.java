@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Broadcast;
+import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import javafx.scene.effect.Light.Distant;
+
 
 /**
  * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
@@ -24,29 +29,28 @@ public class TimeService extends MicroService {
         this.Duration = Duration;
     }
 
+
     /**
      * Initializes the TimeService.
      * Starts broadcasting TickBroadcast messages and terminates after the specified duration.
      */
     @Override
     protected void initialize() {
-        // Need to make sure it runs smoothly otherwise we could wait longer than expected
-        try{
-            wait();
-            while(Duration > 0){
-                try{
+        Broadcast b = new TickBroadcast(Duration);     
+        subscribeBroadcast(b.getClass(), c -> {
+            try{
+                if (Duration > 0){
+                    sendBroadcast(b);
                     Thread.sleep(TickTime);
-                    sendBroadcast(new TickBroadcast());
                     Duration--;
                 }
-                catch(InterruptedException e){
-                    e.printStackTrace();
+                else{
+                    terminate();
                 }
             }
-            notifyAll();
-        }
-        catch(InterruptedException e){
-            e.printStackTrace();
-        }
+            catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        });
     }
 }
