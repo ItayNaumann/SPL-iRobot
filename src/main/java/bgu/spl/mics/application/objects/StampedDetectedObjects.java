@@ -10,12 +10,16 @@ public class StampedDetectedObjects {
     private int time;
     private ConcurrentSkipListSet<DetectedObject> DetectedObjects;
 
-    public StampedDetectedObjects(int time){
+    public StampedDetectedObjects(int time) {
         this.time = time;
         DetectedObjects = new ConcurrentSkipListSet<>();
     }
 
-    public ConcurrentSkipListSet<DetectedObject> getDetectedObjects(){
+    public ConcurrentSkipListSet<DetectedObject> getDetectedObjects() {
         return this.DetectedObjects;
+    }
+
+    public int getTime() {
+        return this.time;
     }
 }

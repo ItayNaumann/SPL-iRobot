@@ -7,12 +7,17 @@ package bgu.spl.mics.application.objects;
  * environment.
  */
 public class CloudPoint {
-    final private int x;
-    final private int y;
+    private double x;
+    private double y;
 
-    public CloudPoint(int x, int y) {
+    public CloudPoint(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public void average(CloudPoint other) {
+        x = (x + other.x) / 2;
+        y = (y + other.y) / 2;
     }
 
 }

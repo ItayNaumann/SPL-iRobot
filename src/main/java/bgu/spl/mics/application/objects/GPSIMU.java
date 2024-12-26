@@ -17,4 +17,33 @@ public class GPSIMU {
         this.timeStampedPoses = poses;
     }
 
+    public void setCurTick(int curTick) {
+        this.curTick = curTick;
+    }
+
+    public int getCurTick() {
+        return curTick;
+    }
+
+    public STATUS getCurStatus() {
+        return curStatus;
+    }
+
+    public Pose getPose() {
+        for (Pose pose : timeStampedPoses) {
+            if (pose.time == curTick) {
+                return pose;
+            }
+        }
+        return null;
+    }
+
+    public void setCurStatus(STATUS curStatus) {
+        this.curStatus = curStatus;
+    }
+
+    public void setTimeStampedPoses(List<Pose> timeStampedPoses) {
+        this.timeStampedPoses = timeStampedPoses;
+    }
+
 }

@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,14 +7,40 @@ import java.util.List;
  * Landmarks are identified and updated by the FusionSlam service.
  */
 public class LandMark {
-    private final int id;
+    private final String id;
     private final String description;
     private final List<CloudPoint> coordinates;
 
-    public LandMark(int id, String description, List<CloudPoint> coordinates) {
+    public LandMark(String id, String description, List<CloudPoint> coordinates) {
         this.id = id;
         this.description = description;
         this.coordinates = coordinates;
     }
 
+    public void updateCoordinates(List<CloudPoint> newCoordinates) {
+        for (int i = 0; i < coordinates.size(); i++) {
+            coordinates.get(i).average(newCoordinates.get(i));
+        }
+
+    }
+
+    public List<CloudPoint> getCoordinates() {
+        return coordinates;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof LandMark) {
+            return id.equals(((LandMark) obj).getId()) && description.equals(((LandMark) obj).getDescription());
+        }
+        return false;
+    }
 }
