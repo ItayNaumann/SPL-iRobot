@@ -20,4 +20,12 @@ public class Camera {
         detectObjectsList = new ArrayList<>();
     }
 
+    public List<StampedDetectedObjects> detectedObjectsList(){
+        return detectObjectsList;
+    }
+
+    public int freq(){
+        return freq;
+    }
+
 }

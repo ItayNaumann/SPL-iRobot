@@ -19,6 +19,10 @@ public class StampedDetectedObjects {
         return this.DetectedObjects;
     }
 
+    public int time(){
+        return time;
+    }
+
     public int getTime() {
         return this.time;
     }

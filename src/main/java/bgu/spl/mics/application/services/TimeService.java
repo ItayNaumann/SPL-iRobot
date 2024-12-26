@@ -16,6 +16,7 @@ public class TimeService extends MicroService {
     // Fields
     int TickTime;
     int Duration;
+    int timer;
 
     /**
      * Constructor for TimeService.
@@ -27,6 +28,7 @@ public class TimeService extends MicroService {
         super("Change_This_Name");
         this.TickTime = TickTime;
         this.Duration = Duration;
+        this.timer = 0;
     }
 
 
@@ -36,13 +38,13 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        Broadcast b = new TickBroadcast(Duration);     
+        Broadcast b = new TickBroadcast(timer);     
         subscribeBroadcast(b.getClass(), c -> {
             try{
-                if (Duration > 0){
-                    sendBroadcast(b);
-                    Thread.sleep(TickTime);
-                    Duration--;
+                if (Duration > timer){
+                    sendBroadcast(new TickBroadcast(timer));
+                    Thread.sleep(TickTime*1000);
+                    timer++;
                 }
                 else{
                     terminate();
@@ -52,5 +54,6 @@ public class TimeService extends MicroService {
                 e.printStackTrace();
             }
         });
+        sendBroadcast(b);
     }
 }

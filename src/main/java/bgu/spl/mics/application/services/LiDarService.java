@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
 import bgu.spl.mics.application.objects.TrackedObject;
 
@@ -38,14 +39,15 @@ public class LiDarService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeBroadcast(Broadcast.class, (Broadcast msg) -> {
-            time++;
-            if (time % LiDar.freq == 0) {
-                for (TrackedObject o : LiDar.getLastTrackedObjects()) {
-                    sendEvent(TrackedObjectsEvent); // TODO need to implement this
-                }
-                time = 0;
-            }
+        subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
+            // time++;
+            // if (time % LiDar.freq == 0) {
+            //     for (TrackedObject o : LiDar.getLastTrackedObjects()) {
+            //         sendEvent(TrackedObjectsEvent); // TODO need to implement this
+            //     }
+            //     time = 0;
+            // }
+
         });
     }
 }
