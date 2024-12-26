@@ -22,8 +22,10 @@ public class MessageBusImpl implements MessageBus {
 
 	private MessageBusImpl() {
 		mServiceMsgsQs = new ConcurrentHashMap<>();
-		eventSubsMap = new ConcurrentHashMap<>();
+		mServiceSubs = new ConcurrentHashMap<>();
 		broadcastSubMap = new ConcurrentHashMap<>();
+		eventFutureMap = new ConcurrentHashMap<>();
+		eventSubsMap = new ConcurrentHashMap<>();
 	}
 
 	public static MessageBusImpl getInstance() {
