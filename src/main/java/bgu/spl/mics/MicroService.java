@@ -175,9 +175,9 @@ public abstract class MicroService implements Runnable {
                 Message msg = bus.awaitMessage(this);
                 if (msg != null) {
                     if (msg instanceof Event) {
-
                         Callback tmp = events.get(msg.getClass().getName());
                         tmp.call(msg);
+
                     } else {
                         Callback tmp = broadcasts.get(msg.getClass().getName());
                         tmp.call(msg);

@@ -37,22 +37,20 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		eventSubsMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
 		ConcurrentLinkedQueue<MicroService> subscribers = eventSubsMap.get(type);
-		if (subscribers == null) {
-			subscribers = new ConcurrentLinkedQueue<>();
-			eventSubsMap.put(type, subscribers);
+		synchronized (type) {
+			subscribers.add(m);
 		}
-		subscribers.add(m);
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+		broadcastSubMap.putIfAbsent(type, new ConcurrentSkipListSet<>());
 		ConcurrentSkipListSet<MicroService> subscribers = broadcastSubMap.get(type);
-		if (subscribers == null) {
-			subscribers = new ConcurrentSkipListSet<>();
-			broadcastSubMap.put(type, subscribers);
+		synchronized (type) {
+			subscribers.add(m);
 		}
-		subscribers.add(m);
 	}
 
 	@Override
@@ -66,7 +64,9 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 		ConcurrentSkipListSet<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
 		for (MicroService m : currMicroServices) {
-			mServiceMsgsQs.get(m).add(b);
+			synchronized (m) {
+				mServiceMsgsQs.get(m).add(b);
+			}
 		}
 	}
 
@@ -75,42 +75,54 @@ public class MessageBusImpl implements MessageBus {
 		ConcurrentLinkedQueue<MicroService> subbedMServices = eventSubsMap.get(e.getClass());
 		if (subbedMServices == null || subbedMServices.isEmpty())
 			return null;
-		MicroService m = subbedMServices.poll();
-		ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
-		mServiceMsgQ.add(e);
-		subbedMServices.add(m); // return the mService to the back of the queue
+		synchronized (e.getClass()) {
+			MicroService m = subbedMServices.poll();
+			synchronized (m) {
+				ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
+				mServiceMsgQ.add(e);
+				subbedMServices.add(m); // return the mService to the back of the queue
+			}
+		}
 
 		Future<T> f = new Future<>();
-		eventFutureMap.put(e, f);
+		eventFutureMap.putIfAbsent(e, f);
 		return f;
 	}
 
 	@Override
 	public void register(MicroService m) {
 		ConcurrentSkipListSet<Class<? extends Message>> mServiceSubscribtionSet = new ConcurrentSkipListSet<>();
-		mServiceSubs.put(m, mServiceSubscribtionSet);
-
 		ConcurrentLinkedQueue<Message> mServiceMsgQueue = new ConcurrentLinkedQueue<>();
-		mServiceMsgsQs.put(m, mServiceMsgQueue);
+
+		mServiceSubs.putIfAbsent(m, mServiceSubscribtionSet);
+		mServiceMsgsQs.putIfAbsent(m, mServiceMsgQueue);
 	}
 
 	@Override
 	public void unregister(MicroService m) {
-		mServiceMsgsQs.remove(m);
 
+		// synchronized (m) { could also be here
 		ConcurrentSkipListSet<Class<? extends Message>> subs = mServiceSubs.get(m);
 		for (Class<? extends Message> sub : subs) {
 			if (Event.class.isInstance(sub)) {
+
 				Class<? extends Event> eventClass = (Class<? extends Event>) sub;
-				ConcurrentLinkedQueue<MicroService> eventSubs = eventSubsMap.get(eventClass);
-				eventSubs.remove(m); // keeps the queue's order
+				synchronized (eventClass) {
+					ConcurrentLinkedQueue<MicroService> eventSubs = eventSubsMap.get(eventClass);
+					eventSubs.remove(m); // keeps the queue's order
+				}
 			} else {
 				Class<? extends Broadcast> broadcastClass = (Class<? extends Broadcast>) sub;
-				ConcurrentSkipListSet<MicroService> broadcastSubs = broadcastSubMap.get(broadcastClass);
-				broadcastSubs.remove(m); // dont care about order
+				synchronized (broadcastClass) {
+					ConcurrentSkipListSet<MicroService> broadcastSubs = broadcastSubMap.get(broadcastClass);
+					broadcastSubs.remove(m); // dont care about order
+				}
 			}
 		}
-		mServiceSubs.remove(m);
+		synchronized (m) {
+			mServiceSubs.remove(m);
+			mServiceMsgsQs.remove(m);
+		}
 
 	}
 
@@ -119,8 +131,9 @@ public class MessageBusImpl implements MessageBus {
 		Message msg;
 		ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
 		do {
-			msg = mServiceMsgQ.poll();
-
+			synchronized (m) {
+				msg = mServiceMsgQ.poll();
+			}
 		} while (msg == null);
 
 		return msg;
