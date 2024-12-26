@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Camera {
     final private int id;
-    final private int freq;
+    final public int freq;
     private STATUS currStatus;
     private List<StampedDetectedObjects> detectObjectsList;
 
