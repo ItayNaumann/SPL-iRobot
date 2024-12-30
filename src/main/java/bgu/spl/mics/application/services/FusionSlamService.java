@@ -1,10 +1,14 @@
 package bgu.spl.mics.application.services;
 
+import java.util.concurrent.ConcurrentSkipListSet;
+
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.FusionSlam;
 import bgu.spl.mics.application.objects.TrackedObject;
+import bgu.spl.mics.example.messages.ExampleEvent;
 
 /**
  * FusionSlamService integrates data from multiple sensors to build and update
@@ -37,13 +41,13 @@ public class FusionSlamService extends MicroService {
     @Override
     protected void initialize() {
 
-        subscribeEvent(TrackedObjectsEvent.class, msg -> {
-            TrackedObjectEvent trackedObject = msg.getTrackedObject();
+        subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
+            TrackedObject trackedObject = msg.tracked();
             try {
                 while (trackedObject.getTime() > slam.latestPoseTime()) {
                     wait();
                 }
-                slam.addLandMark(slam.calcLandMark(trackedObject.getTrackedObject()));
+                slam.addLandMark(slam.calcLandMark(trackedObject));
             } catch (Exception e) {
                 e.printStackTrace();
             }

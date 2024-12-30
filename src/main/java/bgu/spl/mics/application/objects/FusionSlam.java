@@ -15,7 +15,7 @@ public class FusionSlam {
 
     private List<LandMark> landmarks;
     private List<Pose> poses;
-    private int latestPoseTime;
+    private Pose latestPose;
 
     private FusionSlam() {
         landmarks = new ArrayList<>();
@@ -32,6 +32,16 @@ public class FusionSlam {
     }
 
     public LandMark calcLandMark(TrackedObject trackedObject) {
+        Pose p = findPoseAtTime(trackedObject.getTime());
+        double yaw = degToRad(p.yaw);
+        for (CloudPoint point : trackedObject.getCoordinates()) {
+            synchronized (point) {
+                point.rotate(yaw);
+                point.add(p.x, p.y);
+            }
+        }
+
+        return new LandMark(trackedObject.getID(), trackedObject.getDescription(), trackedObject.getCoordinates());
 
     }
 
@@ -47,11 +57,25 @@ public class FusionSlam {
 
     public void addPose(Pose pose) {
         poses.add(pose);
-        latestPoseTime = pose.time;
+        latestPose = pose;
+    }
+
+    private Pose findPoseAtTime(int time) {
+        if (time == latestPose.time)
+            return latestPose;
+        for (Pose p : poses) {
+            if (p.time == time)
+                return p;
+        }
+        return null;
     }
 
     public int latestPoseTime() {
-        return latestPoseTime;
+        return latestPose.time;
+    }
+
+    private double degToRad(double theta) {
+        return Math.toRadians(theta);
     }
 
     public List<LandMark> getLandmarks() {

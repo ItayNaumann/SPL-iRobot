@@ -4,11 +4,10 @@ import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import javafx.scene.effect.Light.Distant;
-
 
 /**
- * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
+ * TimeService acts as the global timer for the system, broadcasting
+ * TickBroadcast messages
  * at regular intervals and controlling the simulation's duration.
  */
 public class TimeService extends MicroService {
@@ -21,8 +20,8 @@ public class TimeService extends MicroService {
     /**
      * Constructor for TimeService.
      *
-     * @param TickTime  The duration of each tick in milliseconds.
-     * @param Duration  The total number of ticks before the service terminates.
+     * @param TickTime The duration of each tick in milliseconds.
+     * @param Duration The total number of ticks before the service terminates.
      */
     public TimeService(int TickTime, int Duration) {
         super("Change_This_Name");
@@ -31,26 +30,24 @@ public class TimeService extends MicroService {
         this.timer = 0;
     }
 
-
     /**
      * Initializes the TimeService.
-     * Starts broadcasting TickBroadcast messages and terminates after the specified duration.
+     * Starts broadcasting TickBroadcast messages and terminates after the specified
+     * duration.
      */
     @Override
     protected void initialize() {
-        Broadcast b = new TickBroadcast(timer);     
+        Broadcast b = new TickBroadcast(timer);
         subscribeBroadcast(b.getClass(), c -> {
-            try{
-                if (Duration > timer){
+            try {
+                if (Duration > timer) {
                     sendBroadcast(new TickBroadcast(timer));
-                    Thread.sleep(TickTime*1000);
+                    Thread.sleep(TickTime * 1000);
                     timer++;
-                }
-                else{
+                } else {
                     terminate();
                 }
-            }
-            catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });

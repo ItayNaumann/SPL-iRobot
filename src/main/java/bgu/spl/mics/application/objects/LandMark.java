@@ -19,7 +19,11 @@ public class LandMark {
 
     public void updateCoordinates(List<CloudPoint> newCoordinates) {
         for (int i = 0; i < coordinates.size(); i++) {
-            coordinates.get(i).average(newCoordinates.get(i));
+            CloudPoint curr = coordinates.get(i);
+            CloudPoint other = newCoordinates.get(i);
+            synchronized (curr) {
+                curr.average(other);
+            }
         }
 
     }

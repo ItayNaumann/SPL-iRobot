@@ -20,4 +20,21 @@ public class CloudPoint {
         y = (y + other.y) / 2;
     }
 
+    public void rotate(double yaw) {
+        final float sin = (float) Math.sin(yaw);
+        final float cos = (float) Math.cos(yaw);
+
+        final double newX = x * cos - y * sin;
+        final double newY = x * sin + y * cos;
+
+        x = newX;
+        y = newY;
+
+    }
+
+    public void add(double otherX, double otherY) {
+        x = x + otherX;
+        y = y + otherY;
+    }
+
 }

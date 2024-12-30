@@ -33,7 +33,17 @@ public class LiDarDataBase {
         return instance;
     }
 
-    public List<StampedCloudPoints> cloudPoints(){
+    public List<StampedCloudPoints> cloudPoints() {
         return cloudPoints;
+    }
+
+    public StampedCloudPoints getCloudPoints(int time, int freq) {
+        for (StampedCloudPoints points : cloudPoints) {
+            if (points.timeStamp == (time + freq)) {
+                return points;
+            }
+        }
+
+        return null;
     }
 }

@@ -55,42 +55,47 @@ public class LiDarService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
             // time++;
             // if (time % LiDar.freq == 0) {
-            //     for (TrackedObject o : LiDar.getLastTrackedObjects()) {
-            //         sendEvent(TrackedObjectsEvent); // TODO need to implement this
-            //     }
-            //     time = 0;
+            // for (TrackedObject o : LiDar.getLastTrackedObjects()) {
+            // sendEvent(TrackedObjectsEvent); // TODO need to implement this
             // }
-            time++;
+            // time = 0;
+            // }
+
         });
-        @SuppressWarnings
-        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) ->{
+
+        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) -> {
             ConcurrentHashMap<Integer, StampedCloudPoints> coords = getCoordsByTime();
             StampedDetectedObjects sdo = e.detectedObject();
             List<TrackedObject> tracked = new ArrayList<>();
-            for (DetectedObject d : sdo.getDetectedObjects()){
-                TrackedObject to = new TrackedObject(Integer.toString(d.id()), time, d.description(), StampedCloudPointsToCloudPoints(coords.get(d.id())));
+            for (DetectedObject d : sdo.getDetectedObjects()) {
+                TrackedObject to = new TrackedObject(Integer.toString(d.id()), time, d.description(),
+                        StampedCloudPointsToCloudPoints(coords.get(d.id())));
                 tracked.add(to);
                 LiDar.getLastTrackedObjects().add(to);
             }
-            try {Thread.sleep(LiDar.freq()*1000);}
-            catch (InterruptedException e){ e.printStackTrace();}
+            try {
+                Thread.sleep(LiDar.freq() * 1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             sendEvent(new TrackedObjectsEvent(tracked));
         });
     }
+
     // I assume that there could be muiltiple coords at one time
-    private ConcurrentHashMap<Integer, StampedCloudPoints> getCoordsByTime(){
+    private ConcurrentHashMap<Integer, StampedCloudPoints> getCoordsByTime() {
         ConcurrentHashMap<Integer, StampedCloudPoints> points = new ConcurrentHashMap<>();
-        for (StampedCloudPoints scp : liDarDB.cloudPoints()){
-            if (scp.timeStamp() == time){
+        for (StampedCloudPoints scp : liDarDB.cloudPoints()) {
+            if (scp.timeStamp() == time) {
                 points.put(scp.id(), scp);
             }
         }
         return points;
     }
 
-    private CloudPoint[] StampedCloudPointsToCloudPoints(StampedCloudPoints scp){
+    private CloudPoint[] StampedCloudPointsToCloudPoints(StampedCloudPoints scp) {
         CloudPoint[] output = new CloudPoint[scp.cloudPoints().length];
-        for (int i = 0; i < output.length; i++){
+        for (int i = 0; i < output.length; i++) {
             output[i] = new CloudPoint(scp.cloudPoints()[i][0], scp.cloudPoints()[i][1]);
         }
         return output;
