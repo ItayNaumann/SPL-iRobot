@@ -26,4 +26,8 @@ public class LiDarWorkerTracker {
         return lastTrackedObjects;
     }
 
+    public int freq(){
+        return freq;
+    }
+
 }

@@ -32,4 +32,8 @@ public class LiDarDataBase {
 
         return instance;
     }
+
+    public List<StampedCloudPoints> cloudPoints(){
+        return cloudPoints;
+    }
 }

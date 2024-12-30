@@ -1,9 +1,20 @@
 package bgu.spl.mics.application.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.objects.CloudPoint;
+import bgu.spl.mics.application.objects.DetectedObject;
+import bgu.spl.mics.application.objects.LiDarDataBase;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.StampedCloudPoints;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.objects.TrackedObject;
 
 /**
@@ -18,6 +29,8 @@ public class LiDarService extends MicroService {
 
     LiDarWorkerTracker LiDar;
     int time;
+    String path = ""; // TODO: Write path into .getInstance
+    LiDarDataBase liDarDB = LiDarDataBase.getInstance(path);
 
     /**
      * Constructor for LiDarService.
@@ -47,7 +60,39 @@ public class LiDarService extends MicroService {
             //     }
             //     time = 0;
             // }
-
+            time++;
         });
+        @SuppressWarnings
+        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) ->{
+            ConcurrentHashMap<Integer, StampedCloudPoints> coords = getCoordsByTime();
+            StampedDetectedObjects sdo = e.detectedObject();
+            List<TrackedObject> tracked = new ArrayList<>();
+            for (DetectedObject d : sdo.getDetectedObjects()){
+                TrackedObject to = new TrackedObject(Integer.toString(d.id()), time, d.description(), StampedCloudPointsToCloudPoints(coords.get(d.id())));
+                tracked.add(to);
+                LiDar.getLastTrackedObjects().add(to);
+            }
+            try {Thread.sleep(LiDar.freq()*1000);}
+            catch (InterruptedException e){ e.printStackTrace();}
+            sendEvent(new TrackedObjectsEvent(tracked));
+        });
+    }
+    // I assume that there could be muiltiple coords at one time
+    private ConcurrentHashMap<Integer, StampedCloudPoints> getCoordsByTime(){
+        ConcurrentHashMap<Integer, StampedCloudPoints> points = new ConcurrentHashMap<>();
+        for (StampedCloudPoints scp : liDarDB.cloudPoints()){
+            if (scp.timeStamp() == time){
+                points.put(scp.id(), scp);
+            }
+        }
+        return points;
+    }
+
+    private CloudPoint[] StampedCloudPointsToCloudPoints(StampedCloudPoints scp){
+        CloudPoint[] output = new CloudPoint[scp.cloudPoints().length];
+        for (int i = 0; i < output.length; i++){
+            output[i] = new CloudPoint(scp.cloudPoints()[i][0], scp.cloudPoints()[i][1]);
+        }
+        return output;
     }
 }

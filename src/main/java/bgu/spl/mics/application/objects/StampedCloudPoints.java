@@ -15,4 +15,16 @@ public class StampedCloudPoints {
         this.timeStamp = timeStamp;
         this.cloudPoints = cloudPoints;
     }
+
+    public int timeStamp(){
+        return timeStamp;
+    }
+
+    public int id(){
+        return id;
+    }
+
+    public double[][] cloudPoints(){
+        return cloudPoints;
+    }
 }

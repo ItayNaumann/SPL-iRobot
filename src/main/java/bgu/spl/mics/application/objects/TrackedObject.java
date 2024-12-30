@@ -19,6 +19,7 @@ public class TrackedObject {
         this.coordinates = coordinates;
     }
 
+
     public String getID(){
         return id;
     }
