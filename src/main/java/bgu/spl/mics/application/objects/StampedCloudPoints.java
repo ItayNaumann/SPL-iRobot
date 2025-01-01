@@ -6,25 +6,25 @@ package bgu.spl.mics.application.objects;
  * objects.
  */
 public class StampedCloudPoints {
-    final private int id;
+    final private String id;
     final public int timeStamp;
     final private double[][] cloudPoints;
 
-    public StampedCloudPoints(int id, int timeStamp, double[][] cloudPoints) {
+    public StampedCloudPoints(String id, int timeStamp, double[][] cloudPoints) {
         this.id = id;
         this.timeStamp = timeStamp;
         this.cloudPoints = cloudPoints;
     }
 
-    public int timeStamp(){
+    public int timeStamp() {
         return timeStamp;
     }
 
-    public int id(){
+    public String id() {
         return id;
     }
 
-    public double[][] cloudPoints(){
+    public double[][] cloudPoints() {
         return cloudPoints;
     }
 }

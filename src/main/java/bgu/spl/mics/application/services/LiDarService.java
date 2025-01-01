@@ -66,12 +66,14 @@ public class LiDarService extends MicroService {
         });
 
         subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent ev) -> {
-            ConcurrentHashMap<Integer, StampedCloudPoints> coords = getCoordsByTime();
+            ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
             StampedDetectedObjects sdo = ev.detectedObject();
             for (DetectedObject d : sdo.getDetectedObjects()) {
-                TrackedObject to = new TrackedObject(Integer.toString(d.id()), time, d.description(),
+                TrackedObject to = new TrackedObject(d.id(), time, d.description(),
                         StampedCloudPointsToCloudPoints(coords.get(d.id())));
+
                 sendEvent(new TrackedObjectsEvent(to));
+
                 LiDar.getLastTrackedObjects().add(to);
             }
             try {
@@ -83,8 +85,8 @@ public class LiDarService extends MicroService {
     }
 
     // I assume that there could be muiltiple coords at one time
-    private ConcurrentHashMap<Integer, StampedCloudPoints> getCoordsByTime() {
-        ConcurrentHashMap<Integer, StampedCloudPoints> points = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, StampedCloudPoints> getCoordsByTime() {
+        ConcurrentHashMap<String, StampedCloudPoints> points = new ConcurrentHashMap<>();
         for (StampedCloudPoints scp : liDarDB.cloudPoints()) {
             if (scp.timeStamp() == time) {
                 points.put(scp.id(), scp);
