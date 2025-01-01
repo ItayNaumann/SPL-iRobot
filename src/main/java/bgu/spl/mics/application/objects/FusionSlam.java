@@ -52,7 +52,9 @@ public class FusionSlam {
                 return;
             }
         }
-        landmarks.add(newLandMark);
+        synchronized (landmarks) {
+            landmarks.add(newLandMark);
+        }
     }
 
     public void addPose(Pose pose) {

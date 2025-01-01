@@ -7,6 +7,7 @@ import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.FusionSlam;
+import bgu.spl.mics.application.objects.LandMark;
 import bgu.spl.mics.application.objects.TrackedObject;
 import bgu.spl.mics.example.messages.ExampleEvent;
 
@@ -47,7 +48,8 @@ public class FusionSlamService extends MicroService {
                 while (trackedObject.getTime() > slam.latestPoseTime()) {
                     wait();
                 }
-                slam.addLandMark(slam.calcLandMark(trackedObject));
+                LandMark newLandMark = slam.calcLandMark(trackedObject);
+                slam.addLandMark(newLandMark);
             } catch (Exception e) {
                 e.printStackTrace();
             }
