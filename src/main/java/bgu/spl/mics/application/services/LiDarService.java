@@ -1,10 +1,12 @@
 package bgu.spl.mics.application.services;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import bgu.spl.mics.Broadcast;
+import bgu.spl.mics.Event;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -63,14 +65,13 @@ public class LiDarService extends MicroService {
 
         });
 
-        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent e) -> {
+        subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent ev) -> {
             ConcurrentHashMap<Integer, StampedCloudPoints> coords = getCoordsByTime();
-            StampedDetectedObjects sdo = e.detectedObject();
-            List<TrackedObject> tracked = new ArrayList<>();
+            StampedDetectedObjects sdo = ev.detectedObject();
             for (DetectedObject d : sdo.getDetectedObjects()) {
                 TrackedObject to = new TrackedObject(Integer.toString(d.id()), time, d.description(),
                         StampedCloudPointsToCloudPoints(coords.get(d.id())));
-                tracked.add(to);
+                sendEvent(new TrackedObjectsEvent(to));
                 LiDar.getLastTrackedObjects().add(to);
             }
             try {
@@ -78,7 +79,6 @@ public class LiDarService extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            sendEvent(new TrackedObjectsEvent(tracked));
         });
     }
 
@@ -93,10 +93,10 @@ public class LiDarService extends MicroService {
         return points;
     }
 
-    private CloudPoint[] StampedCloudPointsToCloudPoints(StampedCloudPoints scp) {
-        CloudPoint[] output = new CloudPoint[scp.cloudPoints().length];
-        for (int i = 0; i < output.length; i++) {
-            output[i] = new CloudPoint(scp.cloudPoints()[i][0], scp.cloudPoints()[i][1]);
+    private List<CloudPoint> StampedCloudPointsToCloudPoints(StampedCloudPoints scp) {
+        LinkedList<CloudPoint> output = new LinkedList<>();
+        for (int i = 0; i < scp.cloudPoints().length; i++) {
+            output.add(new CloudPoint(scp.cloudPoints()[i][0], scp.cloudPoints()[i][1]));
         }
         return output;
     }
