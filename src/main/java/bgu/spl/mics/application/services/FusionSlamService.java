@@ -64,7 +64,7 @@ public class FusionSlamService extends MicroService {
         });
 
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast msg) -> {
-            time++;
+
         });
 
     }
