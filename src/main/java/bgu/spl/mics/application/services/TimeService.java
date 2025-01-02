@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
 /**
@@ -50,6 +51,9 @@ public class TimeService extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        });
+        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            terminate();
         });
         sendBroadcast(b);
     }

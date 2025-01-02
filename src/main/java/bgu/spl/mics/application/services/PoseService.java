@@ -1,10 +1,12 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Pose;
+import bgu.spl.mics.application.objects.STATUS;
 
 /**
  * PoseService is responsible for maintaining the robot's current pose (position
@@ -38,7 +40,18 @@ public class PoseService extends MicroService {
             time++;
             gpsImu.setCurTick(time);
             Pose pose = gpsImu.getPose();
+
+            if (pose == null) {
+                gpsImu.setCurStatus(STATUS.ERROR);
+                sendBroadcast(new CrushedBroadcast());
+                return;
+            }
+
             sendEvent(new PoseEvent(pose));
+        });
+        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            gpsImu.setCurStatus(STATUS.DOWN);
+            terminate();
         });
     }
 }

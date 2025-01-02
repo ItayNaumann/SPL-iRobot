@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
@@ -55,22 +56,39 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
-            // time++;
+            time++;
             // if (time % LiDar.freq == 0) {
             // for (TrackedObject o : LiDar.getLastTrackedObjects()) {
             // sendEvent(TrackedObjectsEvent); // TODO need to implement this
             // }
             // time = 0;
             // }
+        });
 
+        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            terminate();
         });
 
         subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent ev) -> {
             ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
             StampedDetectedObjects sdo = ev.detectedObject();
+
+            if (coords.get("ERROR") != null) {
+                sendBroadcast(new CrushedBroadcast());
+                terminate();
+                return;
+            }
+
             for (DetectedObject d : sdo.getDetectedObjects()) {
+                StampedCloudPoints cp = coords.get(d.id());
+
+                if (cp == null) {
+                    sendBroadcast(new CrushedBroadcast());
+                    return;
+                }
+
                 TrackedObject to = new TrackedObject(d.id(), time, d.description(),
-                        StampedCloudPointsToCloudPoints(coords.get(d.id())));
+                        StampedCloudPointsToCloudPoints(cp));
 
                 sendEvent(new TrackedObjectsEvent(to));
 
@@ -82,6 +100,7 @@ public class LiDarService extends MicroService {
                 e.printStackTrace();
             }
         });
+
     }
 
     // I assume that there could be muiltiple coords at one time

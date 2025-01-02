@@ -20,12 +20,19 @@ public class Camera {
         detectObjectsList = new ArrayList<>();
     }
 
-    public List<StampedDetectedObjects> detectedObjectsList(){
+    public List<StampedDetectedObjects> detectedObjectsList() {
         return detectObjectsList;
     }
 
-    public int freq(){
+    public int freq() {
         return freq;
     }
 
+    public void setCurStatus(STATUS newStatus) {
+        currStatus = newStatus;
+    }
+
+    public STATUS geStatus() {
+        return currStatus;
+    }
 }

@@ -6,6 +6,9 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.objects.DetectedObject;
+import bgu.spl.mics.application.objects.STATUS;
+import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 
@@ -45,20 +48,35 @@ public class CameraService extends MicroService {
     protected void initialize() {
 
         subscribeBroadcast(TickBroadcast.class, c -> {
+            time++;
             StampedDetectedObjects sdo = getObjByTime();
             if (sdo != null) {
                 detectedQ.add(sdo);
             }
-            if (!detectedQ.isEmpty() && detectedQ.peek().time() == time - camera.freq()) { // T + F in p 14, im pretty
-                // sure
+            if (!detectedQ.isEmpty() && detectedQ.peek().time() == time - camera.freq()) {
                 StampedDetectedObjects d;
                 synchronized (detectedQ) {
                     d = detectedQ.remove();
                 }
+
+                for (DetectedObject detectedObject : d.getDetectedObjects()) {
+                    if (detectedObject.id() == "ERROR") {
+                        camera.setCurStatus(STATUS.ERROR);
+                        detectedObject.description(); // TODO use it, it describes the error, needed in the json output
+                        sendBroadcast(new CrushedBroadcast());
+                        terminate();
+                        return;
+                    }
+                }
+
                 // You can choose to do something with b
-                Future b = sendEvent(new DetectObjectsEvent(d));
+                sendEvent(new DetectObjectsEvent(d));
             }
-            time++;
+        });
+
+        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            camera.setCurStatus(STATUS.DOWN);
+            terminate();
         });
 
     }
