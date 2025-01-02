@@ -147,4 +147,13 @@ public class LiDarService extends MicroService {
         }
         return output;
     }
+
+    public boolean equals(Object other){
+        if (other instanceof LiDarService) {
+            return liDar.equals(((LiDarService)other).liDar)
+                    & time == ((LiDarService)other).time
+                    & path.equals(((LiDarService)other).path);
+        }
+        return false;
+    }
 }

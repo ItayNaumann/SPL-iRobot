@@ -20,10 +20,10 @@ public class MessageBusImpl implements MessageBus {
 		return MessageBusImplHolder.instance;
 	}
 
-	private ConcurrentHashMap<MicroService, ConcurrentSkipListSet<Class<? extends Message>>> mServiceSubs;
+	private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Class<? extends Message>>> mServiceSubs;
 	private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> mServiceMsgsQs;
 	private ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventSubsMap;
-	private ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentSkipListSet<MicroService>> broadcastSubMap;
+	private ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> broadcastSubMap;
 	private ConcurrentHashMap<Event, Future> eventFutureMap;
 
 	private MessageBusImpl() {
@@ -45,8 +45,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		broadcastSubMap.putIfAbsent(type, new ConcurrentSkipListSet<>());
-		ConcurrentSkipListSet<MicroService> subscribers = broadcastSubMap.get(type);
+		broadcastSubMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
+		ConcurrentLinkedQueue<MicroService> subscribers = broadcastSubMap.get(type);
 		synchronized (type) {
 			subscribers.add(m);
 		}
@@ -61,7 +61,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		ConcurrentSkipListSet<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
+		ConcurrentLinkedQueue<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
 		for (MicroService m : currMicroServices) {
 			synchronized (m) {
 				mServiceMsgsQs.get(m).add(b);
@@ -90,7 +90,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void register(MicroService m) {
-		ConcurrentSkipListSet<Class<? extends Message>> mServiceSubscribtionSet = new ConcurrentSkipListSet<>();
+		ConcurrentLinkedQueue<Class<? extends Message>> mServiceSubscribtionSet = new ConcurrentLinkedQueue<>();
 		ConcurrentLinkedQueue<Message> mServiceMsgQueue = new ConcurrentLinkedQueue<>();
 
 		mServiceSubs.putIfAbsent(m, mServiceSubscribtionSet);
@@ -101,7 +101,7 @@ public class MessageBusImpl implements MessageBus {
 	public void unregister(MicroService m) {
 
 		// synchronized (m) { could also be here
-		ConcurrentSkipListSet<Class<? extends Message>> subs = mServiceSubs.get(m);
+		ConcurrentLinkedQueue<Class<? extends Message>> subs = mServiceSubs.get(m);
 		for (Class<? extends Message> sub : subs) {
 			if (Event.class.isInstance(sub)) {
 
@@ -113,7 +113,7 @@ public class MessageBusImpl implements MessageBus {
 			} else {
 				Class<? extends Broadcast> broadcastClass = (Class<? extends Broadcast>) sub;
 				synchronized (broadcastClass) {
-					ConcurrentSkipListSet<MicroService> broadcastSubs = broadcastSubMap.get(broadcastClass);
+					ConcurrentLinkedQueue<MicroService> broadcastSubs = broadcastSubMap.get(broadcastClass);
 					broadcastSubs.remove(m); // dont care about order
 				}
 			}
@@ -138,4 +138,19 @@ public class MessageBusImpl implements MessageBus {
 		return msg;
 	}
 
+	/**
+	 * Getters, added for tests
+	 */
+	public ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Class<? extends Message>>> mServiceSubs(){
+		return mServiceSubs;
+	}
+	public ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> mServiceMsgsQs(){ return mServiceMsgsQs; }
+
+	public ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> broadcastSubMap() {
+		return broadcastSubMap;
+	}
+
+	public  ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventSubsMap(){ return eventSubsMap; }
+
+	public ConcurrentHashMap<Event, Future> eventFutureMap(){ return eventFutureMap; }
 }

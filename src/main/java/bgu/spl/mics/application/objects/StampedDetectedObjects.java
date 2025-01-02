@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
@@ -8,14 +9,14 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 public class StampedDetectedObjects {
     private int time;
-    private ConcurrentSkipListSet<DetectedObject> DetectedObjects;
+    private ConcurrentLinkedQueue<DetectedObject> DetectedObjects;
 
     public StampedDetectedObjects(int time) {
         this.time = time;
-        DetectedObjects = new ConcurrentSkipListSet<>();
+        DetectedObjects = new ConcurrentLinkedQueue<>();
     }
 
-    public ConcurrentSkipListSet<DetectedObject> getDetectedObjects() {
+    public ConcurrentLinkedQueue<DetectedObject> getDetectedObjects() {
         return this.DetectedObjects;
     }
 

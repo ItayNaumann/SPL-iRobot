@@ -34,4 +34,13 @@ public class LiDarWorkerTracker {
         return id;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+        LiDarWorkerTracker that = (LiDarWorkerTracker) other;
+        return id == that.id && freq == that.freq && currStatus == that.currStatus;
+    }
+
+
 }

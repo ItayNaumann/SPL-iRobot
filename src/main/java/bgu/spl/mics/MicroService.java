@@ -192,4 +192,10 @@ public abstract class MicroService implements Runnable {
         }
         bus.unregister(this);
     }
+
+    /**
+     * Getters
+     */
+    public ConcurrentHashMap<String, Callback> getEvents() { return events; }
+    public ConcurrentHashMap<String, Callback> getBroadcasts() { return broadcasts; }
 }
