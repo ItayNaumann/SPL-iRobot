@@ -56,7 +56,7 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
-            time++;
+            time = t.time;
             // if (time % LiDar.freq == 0) {
             // for (TrackedObject o : LiDar.getLastTrackedObjects()) {
             // sendEvent(TrackedObjectsEvent); // TODO need to implement this

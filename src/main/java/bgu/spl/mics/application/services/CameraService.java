@@ -48,7 +48,7 @@ public class CameraService extends MicroService {
     protected void initialize() {
 
         subscribeBroadcast(TickBroadcast.class, c -> {
-            time++;
+            time = c.time;
             StampedDetectedObjects sdo = getObjByTime();
             if (sdo != null) {
                 detectedQ.add(sdo);

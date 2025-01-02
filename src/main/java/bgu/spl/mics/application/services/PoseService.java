@@ -37,7 +37,7 @@ public class PoseService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast msg) -> {
-            time++;
+            time = msg.time;
             gpsImu.setCurTick(time);
             Pose pose = gpsImu.getPose();
 
