@@ -37,4 +37,11 @@ public class CloudPoint {
         y = y + otherY;
     }
 
+    public double x() {
+        return x;
+    }
+
+    public double y() {
+        return y;
+    }
 }

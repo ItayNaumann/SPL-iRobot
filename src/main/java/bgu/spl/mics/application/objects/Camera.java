@@ -8,12 +8,12 @@ import java.util.List;
  * Responsible for detecting objects in the environment.
  */
 public class Camera {
-    final private String id;
+    final private int id;
     final public int freq;
     private STATUS currStatus;
     private List<StampedDetectedObjects> detectObjectsList;
 
-    public Camera(String id, int freq, STATUS status) {
+    public Camera(int id, int freq, STATUS status) {
         this.id = id;
         this.freq = freq;
         currStatus = status;
@@ -34,5 +34,9 @@ public class Camera {
 
     public STATUS geStatus() {
         return currStatus;
+    }
+
+    public int getId(){
+        return id;
     }
 }

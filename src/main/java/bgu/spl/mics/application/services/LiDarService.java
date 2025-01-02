@@ -1,12 +1,9 @@
 package bgu.spl.mics.application.services;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import bgu.spl.mics.Broadcast;
-import bgu.spl.mics.Event;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
@@ -23,14 +20,14 @@ import bgu.spl.mics.application.objects.TrackedObject;
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
  * sending TrackedObjectsEvents to the FusionSLAM service.
- *
+ * <p>
  * This service interacts with the LiDarTracker object to retrieve and process
  * cloud point data and updates the system's StatisticalFolder upon sending its
  * observations.
  */
 public class LiDarService extends MicroService {
 
-    LiDarWorkerTracker LiDar;
+    LiDarWorkerTracker liDar;
     int time;
     String path = ""; // TODO: Write path into .getInstance
     LiDarDataBase liDarDB = LiDarDataBase.getInstance(path);
@@ -42,9 +39,9 @@ public class LiDarService extends MicroService {
      *                     process data.
      */
     public LiDarService(LiDarWorkerTracker // changed from LiDarTracker
-    liDarTracker) {
+                                liDarTracker) {
         super("Change_This_Name");
-        this.LiDar = liDarTracker;
+        this.liDar = liDarTracker;
         time = 0;
     }
 
@@ -70,34 +67,38 @@ public class LiDarService extends MicroService {
         });
 
         subscribeEvent(DetectObjectsEvent.class, (DetectObjectsEvent ev) -> {
-            ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
-            StampedDetectedObjects sdo = ev.detectedObject();
+            ev.getHandledByID().compareAndSet(-1, liDar.id());
+            if (ev.getHandledByID().get() == liDar.id()) {
 
-            if (coords.get("ERROR") != null) {
-                sendBroadcast(new CrushedBroadcast());
-                terminate();
-                return;
-            }
+                ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
+                StampedDetectedObjects sdo = ev.detectedObject();
 
-            for (DetectedObject d : sdo.getDetectedObjects()) {
-                StampedCloudPoints cp = coords.get(d.id());
-
-                if (cp == null) {
+                if (coords.get("ERROR") != null) {
                     sendBroadcast(new CrushedBroadcast());
+                    terminate();
                     return;
                 }
 
-                TrackedObject to = new TrackedObject(d.id(), time, d.description(),
-                        StampedCloudPointsToCloudPoints(cp));
+                for (DetectedObject d : sdo.getDetectedObjects()) {
+                    StampedCloudPoints cp = coords.get(d.id());
 
-                sendEvent(new TrackedObjectsEvent(to));
+                    if (cp == null) {
+                        sendBroadcast(new CrushedBroadcast());
+                        return;
+                    }
 
-                LiDar.getLastTrackedObjects().add(to);
-            }
-            try {
-                Thread.sleep(LiDar.freq() * 1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                    TrackedObject to = new TrackedObject(d.id(), time, d.description(),
+                            StampedCloudPointsToCloudPoints(cp));
+
+                    sendEvent(new TrackedObjectsEvent(to));
+
+                    liDar.getLastTrackedObjects().add(to);
+                }
+                try {
+                    Thread.sleep(liDar.freq() * 1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
