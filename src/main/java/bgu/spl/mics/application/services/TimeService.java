@@ -44,7 +44,7 @@ public class TimeService extends MicroService {
             try {
                 if (Duration > timer) {
                     sendBroadcast(new TickBroadcast(timer));
-                    Thread.sleep(TickTime * 1000);
+                    Thread.sleep(TickTime * 1000L);
                     timer++;
                 } else {
                     terminate();
@@ -53,7 +53,7 @@ public class TimeService extends MicroService {
                 e.printStackTrace();
             }
         });
-        
+
         //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
             terminate();

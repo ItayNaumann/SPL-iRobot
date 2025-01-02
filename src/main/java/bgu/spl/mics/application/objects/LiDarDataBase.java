@@ -39,7 +39,7 @@ public class LiDarDataBase {
 
     public StampedCloudPoints getCloudPoints(int time, int freq) {
         for (StampedCloudPoints points : cloudPoints) {
-            if (points.timeStamp == (time + freq)) {
+            if (points.timeStamp() == (time + freq)) {
                 return points;
             }
         }

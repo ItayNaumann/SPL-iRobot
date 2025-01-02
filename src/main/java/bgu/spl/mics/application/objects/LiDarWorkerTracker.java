@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class LiDarWorkerTracker {
     final private int id;
-    final public int freq;
+    final private int freq;
     final private STATUS currStatus;
     final private List<TrackedObject> lastTrackedObjects;
 
@@ -33,4 +33,5 @@ public class LiDarWorkerTracker {
     public int id() {
         return id;
     }
+
 }

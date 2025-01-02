@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
@@ -28,6 +29,8 @@ public class LiDarService extends MicroService {
     int time;
     String path = ""; // TODO: Write path into .getInstance
     LiDarDataBase liDarDB = LiDarDataBase.getInstance(path);
+    final ConcurrentLinkedQueue<TrackedObject> seenQ;
+
 
     /**
      * Constructor for LiDarService.
@@ -40,6 +43,7 @@ public class LiDarService extends MicroService {
         super("Change_This_Name");
         this.liDar = liDarTracker;
         time = 0;
+        seenQ = new ConcurrentLinkedQueue<>();
     }
 
     /**
@@ -51,6 +55,17 @@ public class LiDarService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
             time = t.time;
+            for (TrackedObject to : seenQ) {
+                if (to.getTime() + liDar.freq() >= time) {
+                    synchronized (seenQ) {
+                        seenQ.remove(to);
+                    }
+
+                    sendTrackedObject(to);
+                }
+
+            }
+
             // if (time % LiDar.freq == 0) {
             // for (TrackedObject o : LiDar.getLastTrackedObjects()) {
             // sendEvent(TrackedObjectsEvent); // TODO need to implement this
@@ -83,22 +98,34 @@ public class LiDarService extends MicroService {
 
                 for (DetectedObject d : sdo.getDetectedObjects()) {
                     StampedCloudPoints cp = coords.get(d.id());
-                    // TODO do something if LiDar.freq > Cam.freq
 
-                    TrackedObject to = new TrackedObject(d.id(), time, d.description(),
+                    TrackedObject to = new TrackedObject(d.id(), cp.timeStamp(), d.description(),
                             StampedCloudPointsToCloudPoints(cp));
 
-                    sendEvent(new TrackedObjectsEvent(to));
-
-                    liDar.getLastTrackedObjects().add(to);
+                    if (time >= cp.timeStamp() + liDar.freq()) {
+                        sendTrackedObject(to);
+                    } else {
+                        synchronized (seenQ) {
+                            seenQ.add(to);
+                        }
+                    }
                 }
                 try {
-                    Thread.sleep(liDar.freq() * 1000);
+                    Thread.sleep(liDar.freq() * 1000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         });
+
+    }
+
+    private void sendTrackedObject(TrackedObject to) {
+        sendEvent(new TrackedObjectsEvent(to));
+        List<TrackedObject> lastTrackedObjects = liDar.getLastTrackedObjects();
+        synchronized (lastTrackedObjects) {
+            lastTrackedObjects.add(to);
+        }
 
     }
 
