@@ -39,4 +39,12 @@ public class Camera {
     public int getId(){
         return id;
     }
+
+    public StampedDetectedObjects getObjByTime(int time) {
+        for (StampedDetectedObjects o : detectObjectsList) {
+            if (o.time() == time)
+                return o;
+        }
+        return null;
+    }
 }

@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.CrushedBroadcast;
-import bgu.spl.mics.application.messages.DetectObjectsEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.CloudPoint;
 import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.LiDarDataBase;
@@ -62,7 +59,12 @@ public class LiDarService extends MicroService {
             // }
         });
 
+        //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            terminate();
+        });
+
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
             terminate();
         });
 
@@ -74,18 +76,14 @@ public class LiDarService extends MicroService {
                 StampedDetectedObjects sdo = ev.detectedObject();
 
                 if (coords.get("ERROR") != null) {
-                    sendBroadcast(new CrushedBroadcast());
+                    sendBroadcast(new CrushedBroadcast(this, ""));
                     terminate();
                     return;
                 }
 
                 for (DetectedObject d : sdo.getDetectedObjects()) {
                     StampedCloudPoints cp = coords.get(d.id());
-
-                    if (cp == null) {
-                        sendBroadcast(new CrushedBroadcast());
-                        return;
-                    }
+                    // TODO do something if LiDar.freq > Cam.freq
 
                     TrackedObject to = new TrackedObject(d.id(), time, d.description(),
                             StampedCloudPointsToCloudPoints(cp));

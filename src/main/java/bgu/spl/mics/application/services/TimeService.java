@@ -4,6 +4,7 @@ import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrushedBroadcast;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
 /**
@@ -52,9 +53,15 @@ public class TimeService extends MicroService {
                 e.printStackTrace();
             }
         });
+        
+        //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
             terminate();
         });
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
+            terminate();
+        });
+
         sendBroadcast(b);
     }
 }

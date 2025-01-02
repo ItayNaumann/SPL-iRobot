@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.CrushedBroadcast;
-import bgu.spl.mics.application.messages.PoseEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.FusionSlam;
 import bgu.spl.mics.application.objects.LandMark;
 import bgu.spl.mics.application.objects.TrackedObject;
@@ -54,10 +51,9 @@ public class FusionSlamService extends MicroService {
 
         });
 
-        subscribeEvent(PoseEvent.class, (PoseEvent event) -> {
-            PoseEvent pose = event;
+        subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
             try {
-                slam.addPose(pose.getPose());
+                slam.addPose(ev.getPose());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -67,7 +63,12 @@ public class FusionSlamService extends MicroService {
 
         });
 
+        //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            terminate();
+        });
+
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
             terminate();
         });
 

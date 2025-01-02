@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrushedBroadcast;
 import bgu.spl.mics.application.messages.PoseEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Pose;
@@ -41,15 +42,24 @@ public class PoseService extends MicroService {
             gpsImu.setCurTick(time);
             Pose pose = gpsImu.getPose();
 
-            if (pose == null) {
-                gpsImu.setCurStatus(STATUS.ERROR);
-                sendBroadcast(new CrushedBroadcast());
-                return;
-            }
+//            probably not needed
+//            if (pose == null) {
+//                gpsImu.setCurStatus(STATUS.ERROR);
+//                sendBroadcast(new CrushedBroadcast());
+//                return;
+//            }
 
             sendEvent(new PoseEvent(pose));
         });
+
+
+        //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            gpsImu.setCurStatus(STATUS.DOWN);
+            terminate();
+        });
+
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
             gpsImu.setCurStatus(STATUS.DOWN);
             terminate();
         });

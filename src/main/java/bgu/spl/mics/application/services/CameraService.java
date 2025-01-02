@@ -1,9 +1,11 @@
 package bgu.spl.mics.application.services;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.DetectedObject;
@@ -23,7 +25,7 @@ public class CameraService extends MicroService {
 
     final Camera camera;
     int time;
-    private ConcurrentLinkedQueue<StampedDetectedObjects> detectedQ;
+    private final ConcurrentLinkedQueue<StampedDetectedObjects> detectedQ;
     // private detectedQ;
 
     /**
@@ -49,7 +51,7 @@ public class CameraService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, c -> {
             time = c.time;
-            StampedDetectedObjects sdo = getObjByTime();
+            StampedDetectedObjects sdo = camera.getObjByTime(time);
             if (sdo != null) {
                 detectedQ.add(sdo);
             }
@@ -60,10 +62,9 @@ public class CameraService extends MicroService {
                 }
 
                 for (DetectedObject detectedObject : d.getDetectedObjects()) {
-                    if (detectedObject.id() == "ERROR") {
+                    if (detectedObject.id().equals("ERROR")) {
                         camera.setCurStatus(STATUS.ERROR);
-                        detectedObject.description(); // TODO use it, it describes the error, needed in the json output
-                        sendBroadcast(new CrushedBroadcast());
+                        sendBroadcast(new CrushedBroadcast(this, detectedObject.description()));
                         terminate();
                         return;
                     }
@@ -79,14 +80,13 @@ public class CameraService extends MicroService {
             terminate();
         });
 
+        subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
+            camera.setCurStatus(STATUS.DOWN);
+            terminate();
+        });
+
     }
 
-    private StampedDetectedObjects getObjByTime() {
-        for (StampedDetectedObjects o : camera.detectedObjectsList()) {
-            if (o.time() == time)
-                return o;
-        }
-        return null;
-    }
+
 
 }
