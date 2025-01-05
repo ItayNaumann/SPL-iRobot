@@ -1,7 +1,15 @@
 package bgu.spl.mics.application.objects;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * LiDarDataBase is a singleton class responsible for managing LiDAR data.
@@ -22,7 +30,14 @@ public class LiDarDataBase {
 
     private LiDarDataBase(String filePath) {
         cloudPoints = new ArrayList<>();
-        // parse the points in the file
+        Gson gson = new Gson();
+        try (Reader reader = new FileReader(filePath)) {
+            Type SDPList = new TypeToken<List<StampedCloudPoints>>(){}.getType();
+            cloudPoints = gson.fromJson(reader, SDPList);
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     public static LiDarDataBase getInstance(String filePath) {
