@@ -19,11 +19,39 @@ public class StatisticalFolder {
         this.landmarks = landmarks;
     }
 
-    public void addLandMark() {
-        landmarks++;
+    public void setLandmarks(int landmarks) {
+
+        this.landmarks = landmarks;
     }
 
     public int getLandMarkAmount() {
+
         return landmarks;
     }
+
+
+    public int getSystemRuntime() {
+        return systemRuntime;
+    }
+
+    public void setSystemRuntime(int systemRuntime) {
+        this.systemRuntime = systemRuntime;
+    }
+
+    public int getObjectsDetected() {
+        return objectsDetected;
+    }
+
+    public void setObjectsDetected(int objectsDetected) {
+        this.objectsDetected = objectsDetected;
+    }
+
+    public int getTrackedObjects() {
+        return trackedObjects;
+    }
+
+    public void setTrackedObjects(int trackedObjects) {
+        this.trackedObjects = trackedObjects;
+    }
+
 }

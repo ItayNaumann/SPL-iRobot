@@ -78,9 +78,17 @@ class MessageBusTest {
         StampedDetectedObjects sdo1 = new StampedDetectedObjects(2);
         sdo1.getDetectedObjects().add(new DetectedObject("2","toy"));
 
-        bus.sendEvent(new DetectObjectsEvent(sdo));
-        bus.sendEvent(new DetectObjectsEvent(sdo1));
+        Event e = new DetectObjectsEvent(sdo);
+        Event e1 = new DetectObjectsEvent(sdo1);
+        bus.sendEvent(e);
+        bus.sendEvent(e1);
 
-        bus.complete();
+        bus.complete(e,1);
+        bus.complete(e1,-1);
+
+        assertEquals(e,new DetectObjectsEvent(sdo).setResult(1));
+        assertEquals(e1,new DetectObjectsEvent(sdo1).setResult(-1));
+
+        assertTrue(bus.eventSubsMap().isEmpty());
     }
 }
