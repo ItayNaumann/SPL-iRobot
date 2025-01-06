@@ -30,6 +30,7 @@ public class LiDarService extends MicroService {
     String path = ""; // TODO: Write path into .getInstance
     LiDarDataBase liDarDB = LiDarDataBase.getInstance(path);
     final ConcurrentLinkedQueue<TrackedObject> seenQ;
+    List<CloudPoint> mostRecentCloudPoints;
 
 
     /**
@@ -76,6 +77,7 @@ public class LiDarService extends MicroService {
 
         //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            sendBroadcast(new LastLiDarFrameBroadcast(mostRecentCloudPoints));
             terminate();
         });
 
@@ -91,7 +93,7 @@ public class LiDarService extends MicroService {
                 StampedDetectedObjects sdo = ev.detectedObject();
 
                 if (coords.get("ERROR") != null) {
-                    sendBroadcast(new CrushedBroadcast(this, ""));
+                    sendBroadcast(new CrushedBroadcast(this, "Sensor LiDar disconnected"));
                     terminate();
                     return;
                 }
@@ -126,7 +128,7 @@ public class LiDarService extends MicroService {
         synchronized (lastTrackedObjects) {
             lastTrackedObjects.add(to);
         }
-
+        mostRecentCloudPoints = to.getCoordinates();
     }
 
     // I assume that there could be muiltiple coords at one time

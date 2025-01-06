@@ -4,6 +4,7 @@ import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrushedBroadcast;
+import bgu.spl.mics.application.messages.StartingTickBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
@@ -39,13 +40,13 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        Broadcast b = new TickBroadcast(timer);
+        TickBroadcast b = new StartingTickBroadcast(timer, TickTime);
         subscribeBroadcast(b.getClass(), c -> {
             try {
+                timer++;
                 if (Duration > timer) {
                     sendBroadcast(new TickBroadcast(timer));
                     Thread.sleep(TickTime * 1000L);
-                    timer++;
                 } else {
                     terminate();
                 }
@@ -63,5 +64,6 @@ public class TimeService extends MicroService {
         });
 
         sendBroadcast(b);
+
     }
 }

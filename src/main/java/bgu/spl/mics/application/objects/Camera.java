@@ -11,7 +11,7 @@ public class Camera {
     final private int id;
     final public int freq;
     private STATUS currStatus;
-    private List<StampedDetectedObjects> detectObjectsList;
+    private final List<StampedDetectedObjects> detectObjectsList;
 
     public Camera(int id, int freq, STATUS status) {
         this.id = id;
@@ -36,7 +36,7 @@ public class Camera {
         return currStatus;
     }
 
-    public int getId(){
+    public int getId() {
         return id;
     }
 
