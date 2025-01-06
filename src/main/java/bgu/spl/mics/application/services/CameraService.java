@@ -5,19 +5,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.TerminatedBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.STATUS;
-import bgu.spl.mics.application.messages.CrushedBroadcast;
-import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 
 /**
  * CameraService is responsible for processing data from the camera and
  * sending DetectObjectsEvents to LiDAR workers.
- *
+ * <p>
  * This service interacts with the Camera object to detect objects and updates
  * the system's StatisticalFolder upon sending its observations.
  */
@@ -26,7 +23,7 @@ public class CameraService extends MicroService {
     final Camera camera;
     int time;
     private final ConcurrentLinkedQueue<StampedDetectedObjects> detectedQ;
-    // private detectedQ;
+    private StampedDetectedObjects lastDetectedObjects;
 
     /**
      * Constructor for CameraService.
@@ -70,6 +67,8 @@ public class CameraService extends MicroService {
                     }
                 }
 
+                lastDetectedObjects = d;
+
                 // You can choose to do something with b
                 sendEvent(new DetectObjectsEvent(d));
             }
@@ -77,6 +76,7 @@ public class CameraService extends MicroService {
 
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
             camera.setCurStatus(STATUS.DOWN);
+            sendBroadcast(new LastCameraFrameBroadcast(lastDetectedObjects));
             terminate();
         });
 
@@ -86,7 +86,6 @@ public class CameraService extends MicroService {
         });
 
     }
-
 
 
 }

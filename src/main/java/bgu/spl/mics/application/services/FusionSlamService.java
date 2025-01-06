@@ -2,20 +2,26 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
-import bgu.spl.mics.application.objects.FusionSlam;
-import bgu.spl.mics.application.objects.LandMark;
-import bgu.spl.mics.application.objects.TrackedObject;
+import bgu.spl.mics.application.objects.*;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * FusionSlamService integrates data from multiple sensors to build and update
  * the robot's global map.
- *
+ * <p>
  * This service receives TrackedObjectsEvents from LiDAR workers and PoseEvents
  * from the PoseService,
  * transforming and updating the map with new landmarks.
  */
 public class FusionSlamService extends MicroService {
     FusionSlam slam;
+    int tickTime;
+    List<MicroService> faultySensors;
+    String error;
+    List<List<CloudPoint>> lastLiDarsFrame;
+    List<StampedDetectedObjects> lastCameraFrame;
 
     /**
      * Constructor for FusionSlamService.
@@ -26,6 +32,9 @@ public class FusionSlamService extends MicroService {
     public FusionSlamService(FusionSlam fusionSlam) {
         super("Change_This_Name");
         this.slam = fusionSlam;
+        this.faultySensors = new LinkedList<>();
+        this.lastLiDarsFrame = new LinkedList<>();
+        this.lastCameraFrame = new LinkedList<>();
     }
 
     /**
@@ -61,15 +70,37 @@ public class FusionSlamService extends MicroService {
         });
 
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast msg) -> {
-
+            if (msg.time == 0) {
+                tickTime = 2 * ((StartingTickBroadcast) msg).TickTime;
+            }
         });
 
         //TODO: create a summarize of the output
         subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+            faultySensors.add(c.crushed);
+            error = c.error;
+            try {
+                Thread.sleep(tickTime * 1000L);
+            } catch (InterruptedException ignored) {
+            }
+            createErrorJson();
             terminate();
         });
 
+        subscribeBroadcast(LastLiDarFrameBroadcast.class, (LastLiDarFrameBroadcast c) -> {
+            lastLiDarsFrame.add(c.mostRecentCloudPoints);
+        });
+
+        subscribeBroadcast(LastCameraFrameBroadcast.class, (LastCameraFrameBroadcast c) -> {
+            lastCameraFrame.add(c.lastFrame);
+        });
+
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
+            try {
+                Thread.sleep(tickTime * 1000L);
+            } catch (InterruptedException ignored) {
+            }
+            createJson();
             terminate();
         });
 
