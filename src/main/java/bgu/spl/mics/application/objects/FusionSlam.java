@@ -13,8 +13,8 @@ import java.util.List;
  */
 public class FusionSlam {
 
-    private List<LandMark> landmarks;
-    private List<Pose> poses;
+    private final List<LandMark> landmarks;
+    private final List<Pose> poses;
     private Pose latestPose;
 
     private FusionSlam() {
@@ -24,7 +24,7 @@ public class FusionSlam {
 
     // Singleton instance holder
     private static class SlamHolder {
-        private static FusionSlam slam = new FusionSlam();
+        private static final FusionSlam slam = new FusionSlam();
     }
 
     public static FusionSlam getInstance() {
