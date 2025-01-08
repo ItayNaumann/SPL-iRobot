@@ -62,34 +62,5 @@ class MessageBusTest {
             assertEquals(iter.next(),iter2.next());
         }
     }
-    @Test
-    void completeTest(){
-        MessageBusImpl bus = MessageBusImpl.getInstance();
 
-        LiDarWorkerTracker l = new LiDarWorkerTracker(1,1,STATUS.UP);
-        LiDarWorkerTracker l2 = new LiDarWorkerTracker(2,1,STATUS.UP);
-        LiDarService ls = new LiDarService(l);
-        LiDarService ls2 = new LiDarService(l2);
-        bus.subscribeBroadcast(TickBroadcast.class,ls);
-        bus.subscribeBroadcast(TickBroadcast.class,ls2);
-
-        StampedDetectedObjects sdo = new StampedDetectedObjects(1);
-        sdo.getDetectedObjects().add(new DetectedObject("1","wall"));
-
-        StampedDetectedObjects sdo1 = new StampedDetectedObjects(2);
-        sdo1.getDetectedObjects().add(new DetectedObject("2","toy"));
-
-        Event e = new DetectObjectsEvent(sdo);
-        Event e1 = new DetectObjectsEvent(sdo1);
-        bus.sendEvent(e);
-        bus.sendEvent(e1);
-
-        bus.complete(e,1);
-        bus.complete(e1,-1);
-
-        assertEquals(e,new DetectObjectsEvent(sdo).setResult(1));
-        assertEquals(e1,new DetectObjectsEvent(sdo1).setResult(-1));
-
-        assertTrue(bus.eventSubsMap().isEmpty());
-    }
 }

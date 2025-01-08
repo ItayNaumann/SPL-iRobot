@@ -7,6 +7,7 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -25,6 +26,9 @@ public class Main {
 
         // Config parse
         ConfigParse config = new ConfigParse();
+        File file = new File(args[0]);
+        String directoryPath = file.getParent();
+
         try (FileReader reader = new FileReader(args[0])) {
             config = gson.fromJson(reader, ConfigParse.class);
         } catch (IOException e) {

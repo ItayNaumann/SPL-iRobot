@@ -1,3 +1,5 @@
+package bgu.spl.mics;
+
 import bgu.spl.mics.application.objects.*;
 import org.junit.jupiter.api.Test;
 
