@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
  */
 public class FusionSlamService extends MicroService {
     FusionSlam slam;
+    String creationPath;
     int tickTime;
     int systemRuntime;
     int numDetectedObjects = 0;
@@ -39,8 +40,9 @@ public class FusionSlamService extends MicroService {
      * @param fusionSlam The FusionSLAM object responsible for managing the global
      *                   map.
      */
-    public FusionSlamService(FusionSlam fusionSlam) {
+    public FusionSlamService(FusionSlam fusionSlam, String creationPath) {
         super("Change_This_Name");
+        this.creationPath = creationPath;
         this.slam = fusionSlam;
         this.faultySensors = new ConcurrentLinkedQueue<MicroService>();
         this.lastLiDarsFrame = new ConcurrentLinkedQueue<>();
@@ -126,7 +128,7 @@ public class FusionSlamService extends MicroService {
         ErrorOutputFile errorOutputFile = new ErrorOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
                 slam.getLandmarks().size(), error, faultySensors, lastLiDarsFrame, lastCameraFrame);
 
-        try (FileWriter writer = new FileWriter("output.json")) {
+        try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
             gson.toJson(errorOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -138,7 +140,7 @@ public class FusionSlamService extends MicroService {
         NormalOutputFile normalOutputFile = new NormalOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
                 slam.getLandmarks().size(), slam.getLandmarks());
 
-        try (FileWriter writer = new FileWriter("normal_output.json")) {
+        try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
             gson.toJson(normalOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -185,7 +187,7 @@ public class FusionSlamService extends MicroService {
         private List<LandMark> landmarks;
 
         public NormalOutputFile(int systemRuntime, int numDetectedObjects, int numTrackedObjects,
-                int numLandmarks, List<LandMark> landmarks) {
+                                int numLandmarks, List<LandMark> landmarks) {
             this.systemRuntime = systemRuntime;
             this.numDetectedObjects = numDetectedObjects;
             this.numTrackedObjects = numTrackedObjects;

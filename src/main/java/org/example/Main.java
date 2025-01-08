@@ -68,7 +68,7 @@ public class Main {
         for (LiDarWorkerTracker lwt : lidars) {
             threads.add(new LiDarService(lwt, liDarDB));
         }
-        threads.add(new FusionSlamService(slam));
+        threads.add(new FusionSlamService(slam, directoryPath));
         threads.add(new PoseService(gpsimu));
         for (MicroService m : threads) {
             m.run();
