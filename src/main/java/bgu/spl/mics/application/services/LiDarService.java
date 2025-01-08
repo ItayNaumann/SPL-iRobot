@@ -82,7 +82,7 @@ public class LiDarService extends MicroService {
         });
 
         //TODO: create a summarize of the output
-        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             sendBroadcast(new LastLiDarFrameBroadcast(mostRecentCloudPoints));
             terminate();
         });
@@ -99,7 +99,7 @@ public class LiDarService extends MicroService {
                 StampedDetectedObjects sdo = ev.detectedObject();
 
                 if (coords.get("ERROR") != null) {
-                    sendBroadcast(new CrushedBroadcast(this, "Sensor LiDar disconnected"));
+                    sendBroadcast(new CrashedBroadcast(this, "Sensor LiDar disconnected"));
                     terminate();
                     return;
                 }

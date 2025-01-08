@@ -91,7 +91,7 @@ public class FusionSlamService extends MicroService {
         });
 
         // TODO: create a summarize of the output
-        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             faultySensors.add(c.crushed);
             error = c.error;
             try {

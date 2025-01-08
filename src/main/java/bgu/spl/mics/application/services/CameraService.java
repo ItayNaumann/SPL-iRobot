@@ -1,9 +1,7 @@
 package bgu.spl.mics.application.services;
 
-import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.Camera;
@@ -61,7 +59,7 @@ public class CameraService extends MicroService {
                 for (DetectedObject detectedObject : d.getDetectedObjects()) {
                     if (detectedObject.id().equals("ERROR")) {
                         camera.setCurStatus(STATUS.ERROR);
-                        sendBroadcast(new CrushedBroadcast(this, detectedObject.description()));
+                        sendBroadcast(new CrashedBroadcast(this, detectedObject.description()));
                         terminate();
                         return;
                     }
@@ -74,7 +72,7 @@ public class CameraService extends MicroService {
             }
         });
 
-        subscribeBroadcast(CrushedBroadcast.class, (CrushedBroadcast c) -> {
+        subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             camera.setCurStatus(STATUS.DOWN);
             sendBroadcast(new LastCameraFrameBroadcast(lastDetectedObjects));
             terminate();
