@@ -172,19 +172,19 @@ class FusionSlamTest {
         points4.getLast().rotate(-pose3.yaw);
         points4.addLast(new CloudPoint(p12.x() - pose3.x, p12.y() - pose3.y));
         points4.getLast().rotate(-pose3.yaw);
-        TrackedObject to4 = new TrackedObject("3", 6, "wall3", points4);
+        TrackedObject to4 = new TrackedObject("4", 6, "wall3", points4);
 
         FusionSlam fs = FusionSlam.getInstance();
 
         fs.addPose(pose1);
         fs.addPose(pose2);
         fs.addPose(pose3);
-        
+
 
         LandMark l1 = new LandMark(to1.getID(), to1.getDescription(), list1);
         LandMark l2 = new LandMark(to2.getID(), to2.getDescription(), list2);
         LandMark l3 = new LandMark(to3.getID(), to3.getDescription(), list3);
-        LandMark l4 = new LandMark(to4.getID(), to3.getDescription(), list4);
+        LandMark l4 = new LandMark(to4.getID(), to4.getDescription(), list4);
 
         assertTrue(fs.calcLandMark(to1).equals(l1) & l1.getCoordinates().equals(list1));
         assertTrue(fs.calcLandMark(to2).equals(l2) & l2.getCoordinates().equals(list2));
