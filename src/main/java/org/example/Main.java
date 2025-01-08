@@ -4,19 +4,19 @@ import bgu.spl.mics.application.objects.ConfigParse;
 import bgu.spl.mics.application.objects.Pose;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.services.*;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.*;
+import com.sun.org.apache.xerces.internal.xs.StringList;
 import sun.awt.image.ImageWatched;
 
 public class Main {
@@ -34,11 +34,26 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        List<StampedDetectedObjects> cameraDataList;
+        List<Camera> cameras = config.getCameras().getCamerasConfigurations();
+        HashMap<String, List<List<StampedDetectedObjects>>> cams = new HashMap<>();
+        JsonObject jsonObject;
         try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))) {
-            Type SDOList = new TypeToken<List<StampedDetectedObjects>>() {
-            }.getType();
-            cameraDataList = gson.fromJson(reader, SDOList);
+            jsonObject = gson.fromJson(reader, JsonObject.class);
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
+                List<List<StampedDetectedObjects>> myList;
+                JsonArray jsonArray = jsonObject.getAsJsonArray(key);
+
+                // Convert JsonArray to List<MyObject>
+                Type listType = new TypeToken<List<List<StampedDetectedObjects>>>() {
+                }.getType();
+                myList = gson.fromJson(jsonArray, listType);
+                cams.put(key, myList);
+            }
+            for (Camera c : cameras) {
+                c.setDetectObjectsList(cams.get(c.getId()).get(0));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +67,6 @@ public class Main {
             e.printStackTrace();
         }
         LiDarDataBase liDarDB = LiDarDataBase.getInstance(directoryPath + (config.getLidars().getLidarsDataPath()).substring(1));
-        List<Camera> cameras = config.getCameras().getCamerasConfigurations();
         List<LiDarWorkerTracker> lidars = config.getLidars().getLidarConfigurations();
         int tickTime = config.getTickTime();
         int duration = config.getDuration();
