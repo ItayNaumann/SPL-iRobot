@@ -62,5 +62,37 @@ class MessageBusTest {
             assertEquals(iter.next(),iter2.next());
         }
     }
+    void sendBroadcastTest(){
+        TickBroadcast tick = new TickBroadcast(0);
+
+        MicroService m1 = new CameraService(new Camera(1,0,STATUS.UP));
+        MicroService m2 = new CameraService(new Camera(2,0,STATUS.UP));
+
+        MicroService m3 = new LiDarService(new LiDarWorkerTracker(1,0,STATUS.UP));
+        MicroService m4 = new LiDarService(new LiDarWorkerTracker(2,0,STATUS.UP));
+
+        MicroService m5 = new CameraService(new Camera(3,0,STATUS.UP));
+
+        // Subscribe to TickBroadcast
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        bus.subscribeBroadcast(TickBroadcast.class,m1);
+        bus.subscribeBroadcast(TickBroadcast.class,m2);
+        bus.subscribeBroadcast(TickBroadcast.class,m3);
+        bus.subscribeBroadcast(TickBroadcast.class,m4);
+
+        bus.sendBroadcast(tick);
+
+        assertFalse(bus.broadcastSubMap().get(TickBroadcast.class).isEmpty());
+        assertTrue(m1.getBroadcasts().contains(tick));
+        assertTrue(m2.getBroadcasts().contains(tick));
+        assertTrue(m3.getBroadcasts().contains(tick));
+        assertTrue(m4.getBroadcasts().contains(tick));
+        assertTrue(m5.getBroadcasts().isEmpty());
+
+
+
+
+    }
+
 
 }
