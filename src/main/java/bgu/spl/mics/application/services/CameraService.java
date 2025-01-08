@@ -31,7 +31,7 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("Change_This_Name");
+        super("name"); //TODO change name
         this.camera = camera;
         time = 0;
         detectedQ = new ConcurrentLinkedQueue<>();

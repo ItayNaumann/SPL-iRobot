@@ -19,10 +19,11 @@ import java.util.concurrent.ConcurrentSkipListSet;
 class MessageBusTest {
 
 
-
+    // Change to camera
     @Test
     void subscribeEventTest(){
         MessageBusImpl bus = MessageBusImpl.getInstance();
+
         LiDarWorkerTracker l = new LiDarWorkerTracker(1,1,STATUS.UP);
         LiDarWorkerTracker l2 = new LiDarWorkerTracker(2,1,STATUS.UP);
         LiDarService ls = new LiDarService(l);

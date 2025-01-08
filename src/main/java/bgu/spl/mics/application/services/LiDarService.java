@@ -27,8 +27,7 @@ public class LiDarService extends MicroService {
 
     LiDarWorkerTracker liDar;
     int time;
-    String path = ""; // TODO: Write path into .getInstance
-    LiDarDataBase liDarDB = LiDarDataBase.getInstance(path);
+    LiDarDataBase liDarDB;
     final ConcurrentLinkedQueue<TrackedObject> seenQ;
     List<CloudPoint> mostRecentCloudPoints;
 
@@ -40,11 +39,18 @@ public class LiDarService extends MicroService {
      *                     process data.
      */
     public LiDarService(LiDarWorkerTracker // changed from LiDarTracker
-                                liDarTracker) {
+                                liDarTracker, LiDarDataBase liDarDB) {
         super("Change_This_Name");
         this.liDar = liDarTracker;
         time = 0;
         seenQ = new ConcurrentLinkedQueue<>();
+        this.liDarDB = liDarDB;
+        mostRecentCloudPoints = new LinkedList<>();
+    }
+
+    // Will be used for MassageBus Tests
+    public LiDarService(LiDarWorkerTracker liDarTracker){
+        this(liDarTracker, null);
     }
 
     /**
@@ -153,8 +159,7 @@ public class LiDarService extends MicroService {
     public boolean equals(Object other){
         if (other instanceof LiDarService) {
             return liDar.equals(((LiDarService)other).liDar)
-                    & time == ((LiDarService)other).time
-                    & path.equals(((LiDarService)other).path);
+                    & time == ((LiDarService)other).time;
         }
         return false;
     }
