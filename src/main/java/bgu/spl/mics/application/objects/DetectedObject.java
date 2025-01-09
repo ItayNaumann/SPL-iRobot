@@ -20,4 +20,5 @@ public class DetectedObject {
     public String description(){
         return description;
     }
+
 }

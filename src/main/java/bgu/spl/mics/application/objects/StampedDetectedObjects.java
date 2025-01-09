@@ -9,18 +9,20 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 public class StampedDetectedObjects {
     private int time;
-    private ConcurrentLinkedQueue<DetectedObject> DetectedObjects;
+    private ConcurrentLinkedQueue<DetectedObject> detectedObjects;
 
     public StampedDetectedObjects(int time) {
         this.time = time;
-        DetectedObjects = new ConcurrentLinkedQueue<>();
+        detectedObjects = new ConcurrentLinkedQueue<>();
     }
 
     public ConcurrentLinkedQueue<DetectedObject> getDetectedObjects() {
-        return this.DetectedObjects;
+        return this.detectedObjects;
     }
 
     public int time() {
         return time;
     }
+
+
 }

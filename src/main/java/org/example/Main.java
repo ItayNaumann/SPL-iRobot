@@ -34,40 +34,40 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        List<Camera> cameras = config.getCameras().getCamerasConfigurations();
-        HashMap<String, List<List<StampedDetectedObjects>>> cams = new HashMap<>();
-        JsonObject jsonObject;
-        try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))) {
-            jsonObject = gson.fromJson(reader, JsonObject.class);
-            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-                String key = entry.getKey();
-                JsonElement value = entry.getValue();
-                List<List<StampedDetectedObjects>> myList;
-                JsonArray jsonArray = jsonObject.getAsJsonArray(key);
 
-                // Convert JsonArray to List<MyObject>
-                Type listType = new TypeToken<List<List<StampedDetectedObjects>>>() {
-                }.getType();
-                myList = gson.fromJson(jsonArray, listType);
-                cams.put(key, myList);
-            }
-            for (Camera c : cameras) {
-                c.setDetectObjectsList(cams.get(c.getId()).get(0));
-            }
-        } catch (IOException e) {
+        System.out.println("config parsed");
+
+        Map<String, List<StampedDetectedObjects>> camMap = new HashMap<>();
+        try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))){
+            Type cameraMap = new TypeToken<Map<String,List<StampedDetectedObjects>>>(){}.getType();
+            camMap = gson.fromJson(reader, cameraMap);
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
+        for (List<StampedDetectedObjects> l : camMap.values()) {
+            System.out.println(l);
+        }
+        System.out.println("cams parsed");
 
         List<Pose> poseDataList = new ArrayList<>();
-        try (FileReader reader = new FileReader(directoryPath + (config.getLidars().getLidarsDataPath()).substring(1))) {
+        try (FileReader reader = new FileReader(directoryPath + (config.getPoseJsonFile()).substring(1))) {
             Type POSEList = new TypeToken<List<Pose>>() {
             }.getType();
             poseDataList = gson.fromJson(reader, POSEList);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("pose data parsed");
+
+
         LiDarDataBase liDarDB = LiDarDataBase.getInstance(directoryPath + (config.getLidars().getLidarsDataPath()).substring(1));
+
+        System.out.println("lidar db parsed");
+
         List<LiDarWorkerTracker> lidars = config.getLidars().getLidarConfigurations();
+        List<Camera> cameras = config.getCameras().getCamerasConfigurations();
+
         int tickTime = config.getTickTime();
         int duration = config.getDuration();
         StatisticalFolder statistics = new StatisticalFolder(0, 0, 0, 0);
@@ -77,17 +77,24 @@ public class Main {
         GPSIMU gpsimu = new GPSIMU(0, STATUS.UP, poseDataList);
         List<MicroService> threads = new LinkedList<>();
         for (Camera c : cameras) {
+            c.setCurStatus(STATUS.UP);
+            c.setDetectObjectsList(camMap.get(c.getCameraKey()));
             threads.add(new CameraService(c));
         }
         for (LiDarWorkerTracker lwt : lidars) {
+            lwt.setStatus(STATUS.UP);
             threads.add(new LiDarService(lwt, liDarDB));
         }
+        System.out.println("threads added");
+
         threads.add(new FusionSlamService(slam, directoryPath));
         threads.add(new PoseService(gpsimu));
         for (MicroService m : threads) {
             m.run();
         }
+        System.out.println("threads started");
         timeService.run();
+        System.out.println("timer started");
 
 
     }

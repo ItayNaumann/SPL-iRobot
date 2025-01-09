@@ -32,8 +32,8 @@ public class LiDarDataBase {
         cloudPoints = new ArrayList<>();
         Gson gson = new Gson();
         try (Reader reader = new FileReader(filePath)) {
-            Type SDPList = new TypeToken<List<StampedCloudPoints>>(){}.getType();
-            cloudPoints = gson.fromJson(reader, SDPList);
+            Type SCPList = new TypeToken<List<StampedCloudPoints>>(){}.getType();
+            cloudPoints = gson.fromJson(reader, SCPList);
         }
         catch (IOException e){
             e.printStackTrace();

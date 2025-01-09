@@ -52,8 +52,6 @@ public class TimeService extends MicroService {
                 e.printStackTrace();
             }
         });
-
-        //TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             terminate();
         });

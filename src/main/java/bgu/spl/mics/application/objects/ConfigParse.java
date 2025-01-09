@@ -49,38 +49,38 @@ public class ConfigParse {
             return LidarConfigurations;
         }
     
-        public void setLidarConfigurations(List<LiDarWorkerTracker> lidarConfigurations) {
-            LidarConfigurations = lidarConfigurations;
+        public void setLidarConfigurations(List<LiDarWorkerTracker> LidarConfigurations) {
+            this.LidarConfigurations = LidarConfigurations;
         }
     
         public String getLidarsDataPath() {
             return lidars_data_path;
         }
     
-        public void setLidarsDataPath(String lidarsDataPath) {
-            this.lidars_data_path = lidarsDataPath;
+        public void setLidarsDataPath(String lidars_data_path) {
+            this.lidars_data_path = lidars_data_path;
         }
     }
     private String poseJsonFile;
     private int TickTime;
     private int Duration;
     private CameraConfig Cameras;
-    private LidarConfig Lidars;
+    private LidarConfig LiDarWorkers;
 
     public ConfigParse() {
         poseJsonFile = "";
         TickTime = 0;
         Duration = 0;
         Cameras = new CameraConfig();
-        Lidars = new LidarConfig();
+        LiDarWorkers = new LidarConfig();
     }
 
-    public ConfigParse(String poseJsonFile, int tickTime, int duration, CameraConfig Cameras, LidarConfig Lidars) {
+    public ConfigParse(String poseJsonFile, int tickTime, int duration, CameraConfig Cameras, LidarConfig LidarWorkers) {
         this.poseJsonFile = poseJsonFile;
         TickTime = tickTime;
         Duration = duration;
         this.Cameras = Cameras;
-        this.Lidars = Lidars;
+        this.LiDarWorkers = LidarWorkers;
     }
     public String getPoseJsonFile() {
         return poseJsonFile;
@@ -115,11 +115,11 @@ public class ConfigParse {
     }
     
     public LidarConfig getLidars() {
-        return Lidars;
+        return LiDarWorkers;
     }
     
-    public void setLidars(LidarConfig lidars) {
-        Lidars = lidars;
+    public void setLidars(LidarConfig LiDarWorkers) {
+        this.LiDarWorkers = LiDarWorkers;
     }
     
     

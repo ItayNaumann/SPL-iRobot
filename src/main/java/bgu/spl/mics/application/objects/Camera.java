@@ -8,16 +8,18 @@ import java.util.List;
  * Responsible for detecting objects in the environment.
  */
 public class Camera {
-    final private String id;
+    final private int id;
     final public int freq;
     private STATUS currStatus;
     private List<StampedDetectedObjects> detectObjectsList;
+    private String camera_key;
 
-    public Camera(String id, int freq, STATUS status) {
+    public Camera(int id, int freq, String camera_key) {
         this.id = id;
         this.freq = freq;
-        currStatus = status;
+        currStatus = STATUS.UP;
         detectObjectsList = new ArrayList<>();
+        this.camera_key = camera_key;
     }
 
     public void setDetectObjectsList(List<StampedDetectedObjects> detectObjectsList) {
@@ -40,9 +42,13 @@ public class Camera {
         return currStatus;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
+
+    public String getCameraKey() {return camera_key;}
+
+    public void setCameraKey(String camera_key) {this.camera_key = camera_key;}
 
     public StampedDetectedObjects getObjByTime(int time) {
         for (StampedDetectedObjects o : detectObjectsList) {

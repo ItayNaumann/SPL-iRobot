@@ -65,13 +65,13 @@ class MessageBusTest {
     void sendBroadcastTest(){
         TickBroadcast tick = new TickBroadcast(0);
 
-        MicroService m1 = new CameraService(new Camera(1,0,STATUS.UP));
-        MicroService m2 = new CameraService(new Camera(2,0,STATUS.UP));
+        MicroService m1 = new CameraService(new Camera(1,0,"Camera1"));
+        MicroService m2 = new CameraService(new Camera(2,0,"Camera2"));
 
         MicroService m3 = new LiDarService(new LiDarWorkerTracker(1,0,STATUS.UP));
         MicroService m4 = new LiDarService(new LiDarWorkerTracker(2,0,STATUS.UP));
 
-        MicroService m5 = new CameraService(new Camera(3,0,STATUS.UP));
+        MicroService m5 = new CameraService(new Camera(3,0,"Camera3"));
 
         // Subscribe to TickBroadcast
         MessageBusImpl bus = MessageBusImpl.getInstance();
