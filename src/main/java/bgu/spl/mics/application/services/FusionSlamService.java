@@ -133,7 +133,7 @@ public class FusionSlamService extends MicroService {
         ErrorOutputFile errorOutputFile = new ErrorOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
                 slam.getLandmarks().size(), error, faultySensors, lastLiDarsFrame, lastCameraFrame);
         System.out.println("Err 1");
-        try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
+        try (FileWriter writer = new FileWriter(creationPath + "\\output.json")) {
 
             System.out.println("Err 2");
             gson.toJson(errorOutputFile, writer);
@@ -166,7 +166,7 @@ public class FusionSlamService extends MicroService {
         NormalOutputFile normalOutputFile = new NormalOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
                 slam.getLandmarks().size(), slam.getLandmarks());
         System.out.println("HERE 1");
-        try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
+        try (FileWriter writer = new FileWriter(creationPath + "\\output.json")) {
             System.out.println("HERE 2");
             gson.toJson(normalOutputFile, writer);
         } catch (IOException e) {
