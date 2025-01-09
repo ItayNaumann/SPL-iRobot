@@ -4,10 +4,12 @@ import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 
 public class LastCameraFrameBroadcast implements Broadcast {
+    public final String name;
     public final StampedDetectedObjects lastFrame;
 
-    public LastCameraFrameBroadcast(StampedDetectedObjects lf) {
-        System.out.println("create last camera frame");
+    public LastCameraFrameBroadcast(String name, StampedDetectedObjects lf) {
+        System.out.println("create last camera frame + " + name);
+        this.name = name;
         lastFrame = lf;
     }
 }

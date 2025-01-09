@@ -48,8 +48,9 @@ public class PoseService extends MicroService {
 //                sendBroadcast(new CrushedBroadcast());
 //                return;
 //            }
-
-            sendEvent(new PoseEvent(pose));
+            if (pose != null) {
+                sendEvent(new PoseEvent(pose));
+            }
         });
 
 

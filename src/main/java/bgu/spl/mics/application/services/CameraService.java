@@ -28,7 +28,7 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("CameraService" + camera.getId());
+        super(camera.getCameraKey());
         this.camera = camera;
         time = 0;
     }
@@ -48,12 +48,9 @@ public class CameraService extends MicroService {
             if (sdo != null) {
 
                 for (DetectedObject detectedObject : sdo.getDetectedObjects()) {
-                    System.out.println(detectedObject.id() + detectedObject.description());
                     if (detectedObject.id().equals("ERROR")) {
-                        System.out.println("Hi" + detectedObject.description());
                         camera.setCurStatus(STATUS.ERROR);
                         sendBroadcast(new CrashedBroadcast(this, detectedObject.description()));
-                        terminate();
                         return;
                     }
                 }
@@ -67,7 +64,7 @@ public class CameraService extends MicroService {
 
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             camera.setCurStatus(STATUS.DOWN);
-            sendBroadcast(new LastCameraFrameBroadcast(lastDetectedObjects));
+            sendBroadcast(new LastCameraFrameBroadcast(getName(), lastDetectedObjects));
             terminate();
         });
 

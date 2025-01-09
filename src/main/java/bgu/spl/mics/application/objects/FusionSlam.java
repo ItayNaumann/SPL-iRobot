@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.objects;
 
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -36,14 +38,18 @@ public class FusionSlam {
     public LandMark calcLandMark(TrackedObject trackedObject) {
         Pose p = findPoseAtTime(trackedObject.getTime());
         double yaw = degToRad(p.yaw);
+        LinkedList<CloudPoint> newPoints = new LinkedList<>();
+        CloudPoint newPoint;
         for (CloudPoint point : trackedObject.getCoordinates()) {
-            synchronized (point) {
-                point.rotate(yaw);
-                point.add(p.x, p.y);
-            }
+            newPoint = new CloudPoint(point);
+
+            newPoint.rotate(yaw);
+            newPoint.add(p.x, p.y);
+            newPoints.add(newPoint);
         }
 
-        return new LandMark(trackedObject.getID(), trackedObject.getDescription(), trackedObject.getCoordinates());
+
+        return new LandMark(trackedObject.getID(), trackedObject.getDescription(), newPoints);
 
     }
 

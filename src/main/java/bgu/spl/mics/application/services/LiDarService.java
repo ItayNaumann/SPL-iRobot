@@ -29,7 +29,7 @@ public class LiDarService extends MicroService {
     int time;
     LiDarDataBase liDarDB;
     final ConcurrentLinkedQueue<TrackedObject> seenQ;
-    List<CloudPoint> mostRecentCloudPoints;
+    LinkedList<TrackedObject> mostRecentTrackedObject;
 
 
     /**
@@ -40,12 +40,11 @@ public class LiDarService extends MicroService {
      */
     public LiDarService(LiDarWorkerTracker // changed from LiDarTracker
                                 liDarTracker, LiDarDataBase liDarDB) {
-        super("LiDarService" + liDarTracker.id());
+        super("LiDarWorkerTracker" + liDarTracker.id());
         this.liDar = liDarTracker;
         time = 0;
         seenQ = new ConcurrentLinkedQueue<>();
         this.liDarDB = liDarDB;
-        mostRecentCloudPoints = new LinkedList<>();
     }
 
     // Will be used for MassageBus Tests
@@ -63,16 +62,20 @@ public class LiDarService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
             time = t.time;
             ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
+            LinkedList<TrackedObject> nLL = new LinkedList<>();
             for (TrackedObject to : seenQ) {
                 StampedCloudPoints cp = coords.get(to.getID());
                 if (cp != null) {
+
                     synchronized (seenQ) {
                         seenQ.remove(to);
                     }
 
                     TrackedObject newTo = new TrackedObject(to.getID(), cp.timeStamp(), to.getDescription(), StampedCloudPointsToCloudPoints(cp));
+                    nLL.add(newTo);
                     sendTrackedObject(newTo);
                 }
+                mostRecentTrackedObject = nLL;
 
             }
 
@@ -86,7 +89,8 @@ public class LiDarService extends MicroService {
 
         //TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
-            sendBroadcast(new LastLiDarFrameBroadcast(mostRecentCloudPoints));
+
+            sendBroadcast(new LastLiDarFrameBroadcast(getName(), mostRecentTrackedObject));
 
             terminate();
         });
@@ -107,9 +111,9 @@ public class LiDarService extends MicroService {
 
                 if (coords.get("ERROR") != null) {
                     sendBroadcast(new CrashedBroadcast(this, "Sensor LiDar disconnected"));
-                    terminate();
                     return;
                 }
+                LinkedList<TrackedObject> nLL = new LinkedList<>();
 
                 for (DetectedObject d : sdo.getDetectedObjects()) {
                     StampedCloudPoints cp = coords.get(d.id());
@@ -124,6 +128,8 @@ public class LiDarService extends MicroService {
                     to = new TrackedObject(d.id(), cp.timeStamp(), d.description(),
                             StampedCloudPointsToCloudPoints(cp));
 
+                    nLL.add(to);
+
                     if (time >= cp.timeStamp() + liDar.freq()) {
                         sendTrackedObject(to);
                     } else {
@@ -131,7 +137,9 @@ public class LiDarService extends MicroService {
                             seenQ.add(to);
                         }
                     }
+
                 }
+                mostRecentTrackedObject = nLL;
                 try {
                     Thread.sleep(liDar.freq() * 1000L);
                 } catch (InterruptedException e) {
@@ -143,12 +151,11 @@ public class LiDarService extends MicroService {
     }
 
     private void sendTrackedObject(TrackedObject to) {
-        sendEvent(new TrackedObjectsEvent(to));
+        sendEvent(new TrackedObjectsEvent(time, to));
         List<TrackedObject> lastTrackedObjects = liDar.getLastTrackedObjects();
         synchronized (lastTrackedObjects) {
             lastTrackedObjects.add(to);
         }
-        mostRecentCloudPoints = to.getCoordinates();
     }
 
     // I assume that there could be muiltiple coords at one time

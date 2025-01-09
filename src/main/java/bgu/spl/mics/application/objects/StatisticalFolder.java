@@ -1,5 +1,8 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -10,50 +13,57 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StatisticalFolder {
     private AtomicInteger systemRuntime;
-    private AtomicInteger objectsDetected;
-    private AtomicInteger trackedObjects;
-    private AtomicInteger landmarks;
+    private AtomicInteger numDetectedObjects;
+    private AtomicInteger numTrackedObjects;
+    private AtomicInteger numLandmarks;
+    private Map<String, LandMark> landMarks;
 
     public StatisticalFolder(int systemRuntime, int objectsDetected, int trackedObjects, int landmarks) {
         this.systemRuntime = new AtomicInteger(systemRuntime);
-        this.objectsDetected = new AtomicInteger(objectsDetected);
-        this.trackedObjects = new AtomicInteger(trackedObjects);
-        this.landmarks = new AtomicInteger(landmarks);
+        this.numDetectedObjects = new AtomicInteger(objectsDetected);
+        this.numTrackedObjects = new AtomicInteger(trackedObjects);
+        this.numLandmarks = new AtomicInteger(landmarks);
     }
 
-    public void setLandmarks(int landmarks) {
-
-        this.landmarks.compareAndSet(this.landmarks.get(), landmarks);
+    public void setLandMarks(List<LandMark> landMarkList) {
+        this.landMarks = new HashMap<>();
+        for (LandMark landMark : landMarkList) {
+            landMarks.put(landMark.getId(), landMark);
+        }
+        this.numLandmarks.compareAndSet(this.numLandmarks.get(), landMarkList.size());
     }
+
 
     public int getLandMarkAmount() {
 
-        return landmarks.get();
+        return numLandmarks.get();
     }
 
 
-    public int getSystemRuntime() {
+    public int getNumSystemRuntime() {
         return systemRuntime.get();
     }
 
-    public void setSystemRuntime(int systemRuntime) {
-        this.systemRuntime.compareAndSet(this.systemRuntime.get(), systemRuntime);
+    public void setNumSystemRuntime(int systemRuntime) {
+        if (systemRuntime > this.systemRuntime.get()) {
+            this.systemRuntime.compareAndSet(this.systemRuntime.get(), systemRuntime);
+        }
     }
 
-    public int getObjectsDetected() {
-        return objectsDetected.get();
+    public int getNumObjectsDetected() {
+        return numDetectedObjects.get();
     }
 
-    public void setObjectsDetected(int objectsDetected) {
-        this.objectsDetected.compareAndSet(this.objectsDetected.get(), objectsDetected);
+    public void setNumObjectsDetected(int numDetectedObjects) {
+        this.numDetectedObjects.compareAndSet(this.numDetectedObjects.get(), numDetectedObjects);
     }
 
-    public int getTrackedObjects() {
-        return trackedObjects.get();
+    public int getNumTrackedObjects() {
+        return numTrackedObjects.get();
     }
 
-    public void setTrackedObjects(int trackedObjects) {
-        this.trackedObjects.compareAndSet(this.trackedObjects.get(), trackedObjects);
+    public void setNumTrackedObjects(int numTrackedObjects) {
+        this.numTrackedObjects.compareAndSet(this.numTrackedObjects.get(), numTrackedObjects);
     }
 
     public void addSystemRuntime(int dRuntime) {
@@ -61,15 +71,15 @@ public class StatisticalFolder {
     }
 
     public void addTrackedObjects(int dRuntime) {
-        this.trackedObjects.addAndGet(dRuntime);
+        this.numTrackedObjects.addAndGet(dRuntime);
     }
 
     public void addObjectsDetected(int dRuntime) {
-        this.objectsDetected.addAndGet(dRuntime);
+        this.numDetectedObjects.addAndGet(dRuntime);
     }
 
     public void addLandmark(int dRuntime) {
-        this.landmarks.addAndGet(dRuntime);
+        this.numLandmarks.addAndGet(dRuntime);
     }
 
 }

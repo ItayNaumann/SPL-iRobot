@@ -1,5 +1,11 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.LastCameraFrameBroadcast;
+import bgu.spl.mics.application.messages.LastLiDarFrameBroadcast;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.services.*;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -64,9 +70,17 @@ public class MessageBusImpl implements MessageBus {
         if (broadcastSubMap.containsKey(b.getClass())) {
             ConcurrentLinkedQueue<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
             for (MicroService m : currMicroServices) {
-                if (mServiceMsgsQs.containsKey(m)) {
+                ConcurrentLinkedQueue<Message> d = mServiceMsgsQs.get(m);
+                if (d != null) {
+                    if (b instanceof CrashedBroadcast) {
+                        if (m instanceof TimeService || m instanceof PoseService) {
+                            synchronized (m) {
+                                d.clear();
+                            }
+                        }
+                    }
                     synchronized (m) {
-                        mServiceMsgsQs.get(m).add(b);
+                        d.add(b);
                     }
                 }
             }

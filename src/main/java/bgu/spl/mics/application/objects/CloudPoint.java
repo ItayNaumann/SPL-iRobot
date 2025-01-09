@@ -15,14 +15,19 @@ public class CloudPoint {
         this.y = y;
     }
 
+    public CloudPoint(CloudPoint other) {
+        this.x = other.x;
+        this.y = other.y;
+    }
+
     public void average(CloudPoint other) {
         x = (x + other.x) / 2;
         y = (y + other.y) / 2;
     }
 
     public void rotate(double yaw) {
-        final float sin = (float) Math.sin(yaw);
-        final float cos = (float) Math.cos(yaw);
+        final double sin = Math.sin(yaw);
+        final double cos = Math.cos(yaw);
 
         final double newX = x * cos - y * sin;
         final double newY = x * sin + y * cos;

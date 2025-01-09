@@ -5,8 +5,10 @@ import bgu.spl.mics.application.objects.TrackedObject;
 
 public class TrackedObjectsEvent implements Event<TrackedObject> {
     private final TrackedObject tracked;
+    public final int time;
 
-    public TrackedObjectsEvent(TrackedObject tracked) {
+    public TrackedObjectsEvent(int time, TrackedObject tracked) {
+        this.time = time;
         this.tracked = tracked;
     }
 

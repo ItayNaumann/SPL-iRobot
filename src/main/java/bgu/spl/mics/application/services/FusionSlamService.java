@@ -6,9 +6,8 @@ import bgu.spl.mics.application.objects.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,12 +26,11 @@ public class FusionSlamService extends MicroService {
     FusionSlam slam;
     String creationPath;
     StatisticalFolder statisticalFolder;
-    int tickTime;
     AtomicInteger inputsGot = new AtomicInteger(0);
     ConcurrentLinkedQueue<String> faultySensors;
     String error;
-    ConcurrentLinkedQueue<List<CloudPoint>> lastLiDarsFrame;
-    ConcurrentLinkedQueue<StampedDetectedObjects> lastCameraFrame;
+    final Map<String, List<TrackedObject>> lastLiDarsFrame;
+    final Map<String, StampedDetectedObjects> lastCameraFrame;
 
     /**
      * Constructor for FusionSlamService.
@@ -46,8 +44,8 @@ public class FusionSlamService extends MicroService {
         this.slam = fusionSlam;
         this.statisticalFolder = new StatisticalFolder(0, 0, 0, 0);
         this.faultySensors = new ConcurrentLinkedQueue<>();
-        this.lastLiDarsFrame = new ConcurrentLinkedQueue<>();
-        this.lastCameraFrame = new ConcurrentLinkedQueue<>();
+        this.lastLiDarsFrame = new ConcurrentHashMap<>();
+        this.lastCameraFrame = new ConcurrentHashMap<>();
     }
 
     /**
@@ -62,68 +60,55 @@ public class FusionSlamService extends MicroService {
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
             TrackedObject trackedObject = msg.tracked();
 
+
+            if (trackedObject.getTime() > slam.latestPoseTime()) {
+                sendEvent(msg);
+                return;
+            }
+
             statisticalFolder.addObjectsDetected(1);
             statisticalFolder.addTrackedObjects(1);
 
-            try {
-                while (trackedObject.getTime() > slam.latestPoseTime()) {
-                    synchronized (this) {
-                        wait();
-                    }
-                }
-                LandMark newLandMark = slam.calcLandMark(trackedObject);
-                slam.addLandMark(newLandMark);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            LandMark newLandMark = slam.calcLandMark(trackedObject);
+            slam.addLandMark(newLandMark);
+
+            statisticalFolder.setNumSystemRuntime(msg.time);
 
         });
 
         subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
             try {
                 slam.addPose(ev.getPose());
-                //notifyAll();
+                statisticalFolder.setNumSystemRuntime(ev.getPose().time);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
 
-        subscribeBroadcast(TickBroadcast.class, (TickBroadcast msg) -> {
-            if (msg.time == 0) {
-                tickTime = 2 * ((StartingTickBroadcast) msg).TickTime;
-            }
-            statisticalFolder.setSystemRuntime(msg.time);
-        });
 
         // TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             System.out.println("Crashed in fs");
             faultySensors.add(c.crashed.getName());
             error = c.error;
-            inputsGot.incrementAndGet();
-
-            tryCheckout();
         });
 
         subscribeBroadcast(LastLiDarFrameBroadcast.class, (LastLiDarFrameBroadcast c) -> {
-            lastLiDarsFrame.add(c.mostRecentCloudPoints);
-            inputsGot.incrementAndGet();
+            System.out.println("Got lidar frame");
+            lastLiDarsFrame.put(c.name, c.mostRecentCloudPoints);
             tryCheckout();
         });
 
         subscribeBroadcast(LastCameraFrameBroadcast.class, (LastCameraFrameBroadcast c) -> {
-            lastCameraFrame.add(c.lastFrame);
-            inputsGot.incrementAndGet();
+            System.out.println("Got cam frame");
+            lastCameraFrame.put(c.name, c.lastFrame);
             tryCheckout();
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
             System.out.println("Terminated in fs");
             createJson();
-            try {
-                Thread.sleep(tickTime * 1000L);
-            } catch (InterruptedException ignored) {
-            }
 
 
             terminate();
@@ -133,8 +118,8 @@ public class FusionSlamService extends MicroService {
 
     private void createErrorJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        ErrorOutputFile errorOutputFile = new ErrorOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
-                slam.getLandmarks().size(), error, faultySensors, lastLiDarsFrame, lastCameraFrame);
+        statisticalFolder.setLandMarks(slam.getLandmarks());
+        ErrorOutputFile errorOutputFile = new ErrorOutputFile(error, faultySensors, lastLiDarsFrame, lastCameraFrame, slam.getPoses(), statisticalFolder);
         System.out.println("Err 1");
         try (FileWriter writer = new FileWriter(creationPath + "\\output.json")) {
 
@@ -147,17 +132,15 @@ public class FusionSlamService extends MicroService {
     }
 
     private void tryCheckout() {
-
+        inputsGot.incrementAndGet();
         if (inputsGot.get() != slam.numOfCams + slam.numOfLiDars) {
             System.out.println("Tried checkout " + inputsGot.get() + " " + (slam.numOfCams + slam.numOfLiDars));
             return;
         }
-
+        System.out.println("Got here");
         createErrorJson();
-        try {
-            Thread.sleep(tickTime * 1000L);
-        } catch (InterruptedException ignored) {
-        }
+        System.out.println("Got here 1");
+
 
         terminate();
 
@@ -166,8 +149,8 @@ public class FusionSlamService extends MicroService {
 
     private void createJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        NormalOutputFile normalOutputFile = new NormalOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
-                slam.getLandmarks().size(), slam.getLandmarks());
+        statisticalFolder.setLandMarks(slam.getLandmarks());
+        NormalOutputFile normalOutputFile = new NormalOutputFile(statisticalFolder, slam.getLandmarks());
         System.out.println("HERE 1");
         try (FileWriter writer = new FileWriter(creationPath + "\\output.json")) {
             System.out.println("HERE 2");
@@ -178,38 +161,29 @@ public class FusionSlamService extends MicroService {
     }
 
     private class ErrorOutputFile {
-        private int systemRuntime;
-        private int numDetectedObjects;
-        private int numTrackedObjects;
-        private int numLandmarks;
+
         private String error;
         private List<Object> faultySensors;
-        private List<List<CloudPoint>> lastLiDarsFrame;
-        private List<Object> lastCameraFrame;
+        private Map<String, StampedDetectedObjects> lastCamerasFrame;
+        private Map<String, List<TrackedObject>> lastLiDarWorkerTrackersFrame;
+        private List<Pose> poses;
+        private StatisticalFolder statistics;
 
         public ErrorOutputFile(
-                int systemRuntime, int numDetectedObjects, int numTrackedObjects,
-                int numLandmarks, String error, ConcurrentLinkedQueue<String> faultySensors,
-                ConcurrentLinkedQueue<List<CloudPoint>> lastLiDarsFrame,
-                ConcurrentLinkedQueue<StampedDetectedObjects> lastCameraFrame) {
-            this.systemRuntime = systemRuntime;
-            this.numDetectedObjects = numDetectedObjects;
-            this.numTrackedObjects = numTrackedObjects;
-            this.numLandmarks = numLandmarks;
+                String error, ConcurrentLinkedQueue<String> faultySensors,
+                Map<String, List<TrackedObject>> lastLiDarsFrame,
+                Map<String, StampedDetectedObjects> lastCameraFrame, List<Pose> poses, StatisticalFolder statisticalFolder) {
             this.error = error;
             this.faultySensors = Arrays.asList(faultySensors.toArray());
 
 
-            this.lastLiDarsFrame = new LinkedList<>();
-            this.lastLiDarsFrame.addAll(lastLiDarsFrame);
+            this.lastLiDarWorkerTrackersFrame = lastLiDarsFrame;
 
+            this.poses = poses;
 
-            this.lastCameraFrame = new LinkedList<>();
-            for (StampedDetectedObjects StampedDetectedObjects : lastCameraFrame) {
-                final List<Object> e = Arrays.asList(StampedDetectedObjects.getDetectedObjects().toArray());
-                this.lastCameraFrame.add(e);
-            }
+            this.lastCamerasFrame = lastCameraFrame;
 
+            this.statistics = statisticalFolder;
         }
     }
 
@@ -218,15 +192,21 @@ public class FusionSlamService extends MicroService {
         private int numDetectedObjects;
         private int numTrackedObjects;
         private int numLandmarks;
-        private List<LandMark> landmarks;
+        private List<Map<String, LandMark>> landMarks;
 
-        public NormalOutputFile(int systemRuntime, int numDetectedObjects, int numTrackedObjects,
-                                int numLandmarks, List<LandMark> landmarks) {
-            this.systemRuntime = systemRuntime;
-            this.numDetectedObjects = numDetectedObjects;
-            this.numTrackedObjects = numTrackedObjects;
-            this.numLandmarks = numLandmarks;
-            this.landmarks = landmarks;
+        public NormalOutputFile(StatisticalFolder statisticalFolder, List<LandMark> landmarks) {
+            this.systemRuntime = statisticalFolder.getNumSystemRuntime();
+            this.numDetectedObjects = statisticalFolder.getNumObjectsDetected();
+            this.numTrackedObjects = statisticalFolder.getNumTrackedObjects();
+            this.numLandmarks = statisticalFolder.getLandMarkAmount();
+            this.landMarks = new LinkedList<>();
+            for (LandMark lm : landmarks) {
+                Map<String, LandMark> landmark = new HashMap<>();
+                landmark.put(lm.getId(), lm);
+                System.out.println(lm.getId());
+                this.landMarks.add(landmark);
+            }
+
         }
     }
 
