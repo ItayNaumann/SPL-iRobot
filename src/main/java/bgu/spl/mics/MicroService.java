@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * message-queue (see {@link MessageBus#register(bgu.spl.mics.MicroService)}
  * method). The abstract MicroService stores this callback together with the
  * type of the message is related to.
- *
+ * <p>
  * Only private fields and methods may be added to this class.
  * <p>
  */
@@ -106,8 +106,8 @@ public abstract class MicroService implements Runnable {
      *            {@code e}
      * @param e   The event to send
      * @return {@link Future<T>} object that may be resolved later by a different
-     *         micro-service processing this event.
-     *         null in case no micro-service has subscribed to {@code e.getClass()}.
+     * micro-service processing this event.
+     * null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         return bus.sendEvent(e);
@@ -156,7 +156,7 @@ public abstract class MicroService implements Runnable {
 
     /**
      * @return the name of the service - the service name is given to it in the
-     *         construction time and is used mainly for debugging purposes.
+     * construction time and is used mainly for debugging purposes.
      */
     public final String getName() {
         return name;
@@ -177,15 +177,15 @@ public abstract class MicroService implements Runnable {
                     if (msg instanceof Event) {
                         Callback tmp = events.get(msg.getClass().getName());
                         if (tmp != null)
-                            System.out.println("msg Type: "+msg.getClass());
+//                            System.out.println("msg Type: "+msg.getClass());
                             tmp.call(msg);
 
                     } else {
                         Callback tmp = broadcasts.get(msg.getClass().getName());
-                        System.out.println("microservice: " + getName() + " msg Type: "+msg.getClass().getName());
+//                        System.out.println("microservice: " + getName() + " msg Type: " + msg.getClass().getName());
                         tmp.call(msg);
                     }
-                    System.out.println("msg Type: "+msg.getClass().getName());
+//                    System.out.println("msg Type: " + msg.getClass().getName());
                 }
 
             } catch (Exception e) {
@@ -199,6 +199,11 @@ public abstract class MicroService implements Runnable {
     /**
      * Getters
      */
-    public ConcurrentHashMap<String, Callback> getEvents() { return events; }
-    public ConcurrentHashMap<String, Callback> getBroadcasts() { return broadcasts; }
+    public ConcurrentHashMap<String, Callback> getEvents() {
+        return events;
+    }
+
+    public ConcurrentHashMap<String, Callback> getBroadcasts() {
+        return broadcasts;
+    }
 }

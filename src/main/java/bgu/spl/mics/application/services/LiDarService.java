@@ -49,7 +49,7 @@ public class LiDarService extends MicroService {
     }
 
     // Will be used for MassageBus Tests
-    public LiDarService(LiDarWorkerTracker liDarTracker){
+    public LiDarService(LiDarWorkerTracker liDarTracker) {
         this(liDarTracker, null);
     }
 
@@ -96,7 +96,9 @@ public class LiDarService extends MicroService {
             if (ev.getHandledByID().get() == liDar.id()) {
 
                 ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
-                if (coords == null) {throw new IllegalArgumentException("table is null");}
+                if (coords == null) {
+                    throw new IllegalArgumentException("table is null");
+                }
                 StampedDetectedObjects sdo = ev.detectedObject();
 
                 if (coords.get("ERROR") != null) {
@@ -107,9 +109,15 @@ public class LiDarService extends MicroService {
 
                 for (DetectedObject d : sdo.getDetectedObjects()) {
                     StampedCloudPoints cp = coords.get(d.id());
-
-                    if (cp == null) {throw new IllegalArgumentException("cp is null");}
-                    TrackedObject to = new TrackedObject(d.id(), cp.timeStamp(), d.description(),
+                    TrackedObject to;
+                    if (cp == null) {
+                        to = new TrackedObject(d.id(), cp.timeStamp(), d.description(), null);
+                        synchronized (seenQ) {
+                            seenQ.add(to);
+                        }
+                        continue;
+                    }
+                    to = new TrackedObject(d.id(), cp.timeStamp(), d.description(),
                             StampedCloudPointsToCloudPoints(cp));
 
                     if (time >= cp.timeStamp() + liDar.freq()) {
@@ -158,10 +166,10 @@ public class LiDarService extends MicroService {
         return output;
     }
 
-    public boolean equals(Object other){
+    public boolean equals(Object other) {
         if (other instanceof LiDarService) {
-            return liDar.equals(((LiDarService)other).liDar)
-                    & time == ((LiDarService)other).time;
+            return liDar.equals(((LiDarService) other).liDar)
+                    & time == ((LiDarService) other).time;
         }
         return false;
     }

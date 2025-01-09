@@ -38,16 +38,14 @@ public class Main {
         System.out.println("config parsed");
 
         Map<String, List<StampedDetectedObjects>> camMap = new HashMap<>();
-        try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))){
-            Type cameraMap = new TypeToken<Map<String,List<StampedDetectedObjects>>>(){}.getType();
+        try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))) {
+            Type cameraMap = new TypeToken<Map<String, List<StampedDetectedObjects>>>() {
+            }.getType();
             camMap = gson.fromJson(reader, cameraMap);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        for (List<StampedDetectedObjects> l : camMap.values()) {
-            System.out.println(l);
-        }
+        
         System.out.println("cams parsed");
 
         List<Pose> poseDataList = new ArrayList<>();
@@ -59,7 +57,6 @@ public class Main {
             e.printStackTrace();
         }
         System.out.println("pose data parsed");
-
 
         LiDarDataBase liDarDB = LiDarDataBase.getInstance(directoryPath + (config.getLidars().getLidarsDataPath()).substring(1));
 
@@ -94,7 +91,7 @@ public class Main {
         List<Thread> Threads = new ArrayList<>();
         for (MicroService m : threads) {
             Threads.add(new Thread(m));
-            Threads.get(Threads.size()-1).start();
+            Threads.get(Threads.size() - 1).start();
         }
         System.out.println("threads started");
         try {

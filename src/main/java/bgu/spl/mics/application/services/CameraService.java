@@ -20,7 +20,6 @@ public class CameraService extends MicroService {
 
     final Camera camera;
     int time;
-    private final ConcurrentLinkedQueue<StampedDetectedObjects> detectedQ;
     private StampedDetectedObjects lastDetectedObjects;
 
     /**
@@ -32,7 +31,6 @@ public class CameraService extends MicroService {
         super("CameraService" + camera.getId());
         this.camera = camera;
         time = 0;
-        detectedQ = new ConcurrentLinkedQueue<>();
     }
 
     /**
@@ -46,18 +44,13 @@ public class CameraService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, c -> {
             time = c.time;
-            StampedDetectedObjects sdo = camera.getObjByTime(time);
+            StampedDetectedObjects sdo = camera.getObjByTime(time - camera.freq());
             if (sdo != null) {
-                detectedQ.add(sdo);
-            }
-            if (!detectedQ.isEmpty() && detectedQ.peek().time() == time - camera.freq()) {
-                StampedDetectedObjects d;
-                synchronized (detectedQ) {
-                    d = detectedQ.remove();
-                }
 
-                for (DetectedObject detectedObject : d.getDetectedObjects()) {
+                for (DetectedObject detectedObject : sdo.getDetectedObjects()) {
+                    System.out.println(detectedObject.id() + detectedObject.description());
                     if (detectedObject.id().equals("ERROR")) {
+                        System.out.println("Hi" + detectedObject.description());
                         camera.setCurStatus(STATUS.ERROR);
                         sendBroadcast(new CrashedBroadcast(this, detectedObject.description()));
                         terminate();
@@ -65,10 +58,10 @@ public class CameraService extends MicroService {
                     }
                 }
 
-                lastDetectedObjects = d;
+                lastDetectedObjects = sdo;
 
                 // You can choose to do something with b
-                sendEvent(new DetectObjectsEvent(d));
+                sendEvent(new DetectObjectsEvent(sdo));
             }
         });
 

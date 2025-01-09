@@ -76,7 +76,7 @@ public class FusionSlamService extends MicroService {
 
         });
 
-       subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
+        subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
             try {
                 slam.addPose(ev.getPose());
                 //notifyAll();
@@ -127,8 +127,10 @@ public class FusionSlamService extends MicroService {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         ErrorOutputFile errorOutputFile = new ErrorOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
                 slam.getLandmarks().size(), error, faultySensors, lastLiDarsFrame, lastCameraFrame);
-
+        System.out.println("Err 1");
         try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
+
+            System.out.println("Err 2");
             gson.toJson(errorOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -139,8 +141,9 @@ public class FusionSlamService extends MicroService {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         NormalOutputFile normalOutputFile = new NormalOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
                 slam.getLandmarks().size(), slam.getLandmarks());
-
+        System.out.println("HERE 1");
         try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
+            System.out.println("HERE 2");
             gson.toJson(normalOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -154,7 +157,7 @@ public class FusionSlamService extends MicroService {
         private int numLandmarks;
         private String error;
         private List<Object> faultySensors;
-        private List<List<Object>> lastLiDarsFrame;
+        private List<Object> lastLiDarsFrame;
         private List<Object> lastCameraFrame;
 
         public ErrorOutputFile(
@@ -169,7 +172,7 @@ public class FusionSlamService extends MicroService {
             this.error = error;
             this.faultySensors = Arrays.asList(faultySensors.toArray());
 
-            this.lastLiDarsFrame = Arrays.asList((List<Object>[]) lastLiDarsFrame.toArray());
+            this.lastLiDarsFrame = Arrays.asList(lastLiDarsFrame.toArray());
 
             this.lastCameraFrame = new LinkedList<>();
             for (StampedDetectedObjects StampedDetectedObjects : lastCameraFrame) {
