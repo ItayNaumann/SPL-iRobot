@@ -76,6 +76,7 @@ public class Main {
         FusionSlam slam = FusionSlam.getInstance();
         GPSIMU gpsimu = new GPSIMU(0, STATUS.UP, poseDataList);
         List<MicroService> threads = new ArrayList<>();
+
         for (Camera c : cameras) {
             c.setCurStatus(STATUS.UP);
             c.setDetectObjectsList(camMap.get(c.getCameraKey()));
@@ -83,22 +84,35 @@ public class Main {
         }
         for (LiDarWorkerTracker lwt : lidars) {
             lwt.setStatus(STATUS.UP);
+            lwt.setLastTrackedObjects(new ArrayList<>());
             threads.add(new LiDarService(lwt, liDarDB));
         }
         System.out.println("threads added");
 
         threads.add(new FusionSlamService(slam, directoryPath));
         threads.add(new PoseService(gpsimu));
-        int counter = 0;
+        List<Thread> Threads = new ArrayList<>();
         for (MicroService m : threads) {
-            m.run();
-            System.out.println(counter);
-            counter++;
+            Threads.add(new Thread(m));
+            Threads.get(Threads.size()-1).start();
         }
         System.out.println("threads started");
-        timeService.run();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Thread timer = new Thread(timeService);
+        timer.start();
         System.out.println("timer started");
-
+        try {
+            timer.join();
+            for (Thread t : Threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 }

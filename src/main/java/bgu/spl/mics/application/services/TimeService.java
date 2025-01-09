@@ -28,7 +28,7 @@ public class TimeService extends MicroService {
         super("TimeService");
         this.TickTime = TickTime;
         this.Duration = Duration;
-        this.timer = 0;
+        this.timer = 1;
     }
 
     /**
@@ -38,13 +38,18 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        TickBroadcast b = new StartingTickBroadcast(timer, TickTime);
-        subscribeBroadcast(b.getClass(), c -> {
+        System.out.println("TimeService started");
+        System.out.println("Timer: " + timer);
+        System.out.println("Tick: " + TickTime);
+        System.out.println("Duration: " + Duration);
+        TickBroadcast b = new TickBroadcast(timer);
+        subscribeBroadcast(TickBroadcast.class, c -> {
             try {
-                timer++;
-                if (Duration > timer) {
+                if (Duration >= timer) {
                     sendBroadcast(new TickBroadcast(timer));
-                    Thread.sleep(TickTime * 1000L);
+                    System.out.println("Tick: " + timer);
+                    Thread.sleep(TickTime * 1000);
+                    timer++;
                 } else {
                     terminate();
                 }

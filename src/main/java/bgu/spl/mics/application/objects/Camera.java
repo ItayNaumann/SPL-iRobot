@@ -9,14 +9,14 @@ import java.util.List;
  */
 public class Camera {
     final private int id;
-    final public int freq;
+    final public int frequency;
     private STATUS currStatus;
     private List<StampedDetectedObjects> detectObjectsList;
     private String camera_key;
 
     public Camera(int id, int freq, String camera_key) {
         this.id = id;
-        this.freq = freq;
+        this.frequency = freq;
         currStatus = STATUS.UP;
         detectObjectsList = new ArrayList<>();
         this.camera_key = camera_key;
@@ -31,7 +31,7 @@ public class Camera {
     }
 
     public int freq() {
-        return freq;
+        return frequency;
     }
 
     public void setCurStatus(STATUS newStatus) {

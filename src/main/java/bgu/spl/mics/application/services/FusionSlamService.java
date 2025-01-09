@@ -76,10 +76,10 @@ public class FusionSlamService extends MicroService {
 
         });
 
-        subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
+       subscribeEvent(PoseEvent.class, (PoseEvent ev) -> {
             try {
                 slam.addPose(ev.getPose());
-                notify();
+                //notifyAll();
             } catch (Exception e) {
                 e.printStackTrace();
             }

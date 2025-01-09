@@ -61,10 +61,14 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		ConcurrentLinkedQueue<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
-		for (MicroService m : currMicroServices) {
-			synchronized (m) {
-				mServiceMsgsQs.get(m).add(b);
+		if (broadcastSubMap.containsKey(b.getClass())) {
+			ConcurrentLinkedQueue<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
+			for (MicroService m : currMicroServices) {
+				synchronized (m) {
+					mServiceMsgsQs.get(m).add(b);
+					System.out.println(m.getName() + "gets msg's Type: " + b.getClass().getName());
+					System.out.println(m.getName() + " msgs num: " + mServiceMsgsQs.size());
+				}
 			}
 		}
 	}
@@ -129,11 +133,7 @@ public class MessageBusImpl implements MessageBus {
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		Message msg;
 		ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
-		do {
-			msg = mServiceMsgQ.poll();
-		} while (msg == null);
-
-		return msg;
+		return mServiceMsgQ.poll();
 	}
 
 	/**

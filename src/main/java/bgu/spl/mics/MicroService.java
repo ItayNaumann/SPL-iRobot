@@ -176,13 +176,16 @@ public abstract class MicroService implements Runnable {
                 if (msg != null) {
                     if (msg instanceof Event) {
                         Callback tmp = events.get(msg.getClass().getName());
-                        tmp.call(msg);
+                        if (tmp != null)
+                            System.out.println("msg Type: "+msg.getClass());
+                            tmp.call(msg);
 
                     } else {
                         Callback tmp = broadcasts.get(msg.getClass().getName());
+                        System.out.println("microservice: " + getName() + " msg Type: "+msg.getClass().getName());
                         tmp.call(msg);
-
                     }
+                    System.out.println("msg Type: "+msg.getClass().getName());
                 }
 
             } catch (Exception e) {
