@@ -25,11 +25,12 @@ import com.google.gson.GsonBuilder;
 public class FusionSlamService extends MicroService {
     FusionSlam slam;
     String creationPath;
+    StatisticalFolder statisticalFolder;
     int tickTime;
-    int systemRuntime;
-    int numDetectedObjects = 0;
-    int numTrackedObjects = 0;
-    ConcurrentLinkedQueue<MicroService> faultySensors;
+    int camerasSum = 0;
+    int lidarsSum = 0;
+    int inputsGot = 0;
+    ConcurrentLinkedQueue<String> faultySensors;
     String error;
     ConcurrentLinkedQueue<List<CloudPoint>> lastLiDarsFrame;
     ConcurrentLinkedQueue<StampedDetectedObjects> lastCameraFrame;
@@ -44,7 +45,8 @@ public class FusionSlamService extends MicroService {
         super("FusionSlamService");
         this.creationPath = creationPath;
         this.slam = fusionSlam;
-        this.faultySensors = new ConcurrentLinkedQueue<MicroService>();
+        this.statisticalFolder = new StatisticalFolder(0, 0, 0, 0);
+        this.faultySensors = new ConcurrentLinkedQueue<>();
         this.lastLiDarsFrame = new ConcurrentLinkedQueue<>();
         this.lastCameraFrame = new ConcurrentLinkedQueue<>();
     }
@@ -61,8 +63,8 @@ public class FusionSlamService extends MicroService {
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
             TrackedObject trackedObject = msg.tracked();
 
-            numTrackedObjects++;
-            numDetectedObjects++;
+            statisticalFolder.addObjectsDetected(1);
+            statisticalFolder.addTrackedObjects(1);
 
             try {
                 while (trackedObject.getTime() > slam.latestPoseTime()) {
@@ -89,27 +91,30 @@ public class FusionSlamService extends MicroService {
             if (msg.time == 0) {
                 tickTime = 2 * ((StartingTickBroadcast) msg).TickTime;
             }
-            systemRuntime = msg.time;
+            statisticalFolder.setSystemRuntime(msg.time);
         });
 
         // TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
-            faultySensors.add(c.crushed);
+            faultySensors.add(c.crashed.getName());
             error = c.error;
-            try {
-                Thread.sleep(tickTime * 1000L);
-            } catch (InterruptedException ignored) {
-            }
+            while (inputsGot != camerasSum + lidarsSum)
+                try {
+                    Thread.sleep(tickTime * 1000L);
+                } catch (InterruptedException ignored) {
+                }
             createErrorJson();
             terminate();
         });
 
         subscribeBroadcast(LastLiDarFrameBroadcast.class, (LastLiDarFrameBroadcast c) -> {
             lastLiDarsFrame.add(c.mostRecentCloudPoints);
+            inputsGot++;
         });
 
         subscribeBroadcast(LastCameraFrameBroadcast.class, (LastCameraFrameBroadcast c) -> {
             lastCameraFrame.add(c.lastFrame);
+            inputsGot++;
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
@@ -125,7 +130,7 @@ public class FusionSlamService extends MicroService {
 
     private void createErrorJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        ErrorOutputFile errorOutputFile = new ErrorOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
+        ErrorOutputFile errorOutputFile = new ErrorOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
                 slam.getLandmarks().size(), error, faultySensors, lastLiDarsFrame, lastCameraFrame);
         System.out.println("Err 1");
         try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
@@ -139,7 +144,7 @@ public class FusionSlamService extends MicroService {
 
     private void createJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        NormalOutputFile normalOutputFile = new NormalOutputFile(systemRuntime, numDetectedObjects, numTrackedObjects,
+        NormalOutputFile normalOutputFile = new NormalOutputFile(statisticalFolder.getSystemRuntime(), statisticalFolder.getObjectsDetected(), statisticalFolder.getTrackedObjects(),
                 slam.getLandmarks().size(), slam.getLandmarks());
         System.out.println("HERE 1");
         try (FileWriter writer = new FileWriter(creationPath + "output.json")) {
@@ -157,12 +162,12 @@ public class FusionSlamService extends MicroService {
         private int numLandmarks;
         private String error;
         private List<Object> faultySensors;
-        private List<Object> lastLiDarsFrame;
+        private List<List<CloudPoint>> lastLiDarsFrame;
         private List<Object> lastCameraFrame;
 
         public ErrorOutputFile(
                 int systemRuntime, int numDetectedObjects, int numTrackedObjects,
-                int numLandmarks, String error, ConcurrentLinkedQueue<MicroService> faultySensors,
+                int numLandmarks, String error, ConcurrentLinkedQueue<String> faultySensors,
                 ConcurrentLinkedQueue<List<CloudPoint>> lastLiDarsFrame,
                 ConcurrentLinkedQueue<StampedDetectedObjects> lastCameraFrame) {
             this.systemRuntime = systemRuntime;
@@ -172,13 +177,17 @@ public class FusionSlamService extends MicroService {
             this.error = error;
             this.faultySensors = Arrays.asList(faultySensors.toArray());
 
-            this.lastLiDarsFrame = Arrays.asList(lastLiDarsFrame.toArray());
+
+            this.lastLiDarsFrame = new LinkedList<>();
+            this.lastLiDarsFrame.addAll(lastLiDarsFrame);
+
 
             this.lastCameraFrame = new LinkedList<>();
             for (StampedDetectedObjects StampedDetectedObjects : lastCameraFrame) {
                 final List<Object> e = Arrays.asList(StampedDetectedObjects.getDetectedObjects().toArray());
                 this.lastCameraFrame.add(e);
             }
+
         }
     }
 

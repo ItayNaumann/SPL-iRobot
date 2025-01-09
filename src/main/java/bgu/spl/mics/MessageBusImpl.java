@@ -67,8 +67,6 @@ public class MessageBusImpl implements MessageBus {
                 if (mServiceMsgsQs.containsKey(m)) {
                     synchronized (m) {
                         mServiceMsgsQs.get(m).add(b);
-//					System.out.println(m.getName() + "gets msg's Type: " + b.getClass().getName());
-//					System.out.println(m.getName() + " msgs num: " + mServiceMsgsQs.size());
                     }
                 }
             }
@@ -84,8 +82,12 @@ public class MessageBusImpl implements MessageBus {
             MicroService m = subbedMServices.poll();
             synchronized (m) {
                 ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
-                mServiceMsgQ.add(e);
-                subbedMServices.add(m); // return the mService to the back of the queue
+                if (mServiceMsgQ != null) {
+                    mServiceMsgQ.add(e);
+                    subbedMServices.add(m); // return the mService to the back of the queue
+                } else {
+                    System.out.println(e.getClass() + " " + e);
+                }
             }
         }
 

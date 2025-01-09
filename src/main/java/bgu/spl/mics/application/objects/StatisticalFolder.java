@@ -54,4 +54,20 @@ public class StatisticalFolder {
         this.trackedObjects = trackedObjects;
     }
 
+    public void addSystemRuntime(int dRuntime) {
+        this.systemRuntime += dRuntime;
+    }
+
+    public void addTrackedObjects(int dRuntime) {
+        this.trackedObjects += dRuntime;
+    }
+
+    public void addObjectsDetected(int dRuntime) {
+        this.objectsDetected += dRuntime;
+    }
+
+    public void addLandmark(int dRuntime) {
+        this.landmarks += dRuntime;
+    }
+
 }

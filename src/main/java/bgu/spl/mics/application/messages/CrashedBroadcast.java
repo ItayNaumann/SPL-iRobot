@@ -6,11 +6,11 @@ import bgu.spl.mics.MicroService;
 public class CrashedBroadcast implements Broadcast {
 
     public final String error;
-    public final MicroService crushed;
+    public final MicroService crashed;
 
     public CrashedBroadcast(MicroService crushed, String error) {
-    this.error = error;
-    this.crushed = crushed;
+        this.error = error;
+        this.crashed = crushed;
     }
 
 }

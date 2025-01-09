@@ -62,13 +62,16 @@ public class LiDarService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (TickBroadcast t) -> {
             time = t.time;
+            ConcurrentHashMap<String, StampedCloudPoints> coords = getCoordsByTime();
             for (TrackedObject to : seenQ) {
-                if (to.getTime() + liDar.freq() >= time) {
+                StampedCloudPoints cp = coords.get(to.getID());
+                if (cp != null) {
                     synchronized (seenQ) {
                         seenQ.remove(to);
                     }
 
-                    sendTrackedObject(to);
+                    TrackedObject newTo = new TrackedObject(to.getID(), cp.timeStamp(), to.getDescription(), StampedCloudPointsToCloudPoints(cp));
+                    sendTrackedObject(newTo);
                 }
 
             }
@@ -111,7 +114,7 @@ public class LiDarService extends MicroService {
                     StampedCloudPoints cp = coords.get(d.id());
                     TrackedObject to;
                     if (cp == null) {
-                        to = new TrackedObject(d.id(), cp.timeStamp(), d.description(), null);
+                        to = new TrackedObject(d.id(), 0, d.description(), null);
                         synchronized (seenQ) {
                             seenQ.add(to);
                         }
