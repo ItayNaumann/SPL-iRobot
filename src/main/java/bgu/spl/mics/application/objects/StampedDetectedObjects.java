@@ -24,5 +24,9 @@ public class StampedDetectedObjects {
         return time;
     }
 
+    public String toString() {
+        return time + " " + detectedObjects;
+    }
+
 
 }

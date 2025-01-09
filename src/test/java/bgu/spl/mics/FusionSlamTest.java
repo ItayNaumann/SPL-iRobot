@@ -1,6 +1,8 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.objects.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -10,6 +12,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FusionSlamTest {
+
+    FusionSlam fs;
+
+    @BeforeEach
+    void setUp() {
+        fs = FusionSlam.getInstance();
+    }
+
     @Test
     void calcLandMarkTest1() {
 
@@ -73,7 +83,6 @@ class FusionSlamTest {
         points3.getLast().rotate(-pose3.yaw);
         TrackedObject to3 = new TrackedObject("3", 6, "wall2", points3);
 
-        FusionSlam fs = FusionSlam.getInstance();
 
         fs.addPose(pose1);
         fs.addPose(pose2);
@@ -177,7 +186,6 @@ class FusionSlamTest {
         points4.getLast().rotate(-pose3.yaw);
         TrackedObject to4 = new TrackedObject("4", 6, "wall3", points4);
 
-        FusionSlam fs = FusionSlam.getInstance();
 
         fs.addPose(pose1);
         fs.addPose(pose2);
@@ -241,7 +249,6 @@ class FusionSlamTest {
         points2.addLast(new CloudPoint((curThird.x() + prevThird.x()) / 2, (curThird.y() + prevThird.y()) / 2));
         TrackedObject to2 = new TrackedObject("1", 4, "wall1", points2);
 
-        FusionSlam fs = FusionSlam.getInstance();
 
         fs.addPose(pose1);
         fs.addPose(pose2);

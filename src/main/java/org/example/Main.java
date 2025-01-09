@@ -45,7 +45,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         System.out.println("cams parsed");
 
         List<Pose> poseDataList = new ArrayList<>();
@@ -71,6 +71,9 @@ public class Main {
         TimeService timeService = new TimeService(tickTime, duration);
         MessageBus bus = MessageBusImpl.getInstance();
         FusionSlam slam = FusionSlam.getInstance();
+        slam.numOfCams = cameras.size();
+        slam.numOfLiDars = lidars.size();
+
         GPSIMU gpsimu = new GPSIMU(0, STATUS.UP, poseDataList);
         List<MicroService> threads = new ArrayList<>();
 

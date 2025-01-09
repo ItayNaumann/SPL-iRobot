@@ -16,6 +16,8 @@ public class FusionSlam {
     private final List<LandMark> landmarks;
     private final List<Pose> poses;
     private Pose latestPose;
+    public int numOfCams = 0;
+    public int numOfLiDars = 0;
 
     private FusionSlam() {
         landmarks = new ArrayList<>();

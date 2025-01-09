@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,9 +28,7 @@ public class FusionSlamService extends MicroService {
     String creationPath;
     StatisticalFolder statisticalFolder;
     int tickTime;
-    int camerasSum = 0;
-    int lidarsSum = 0;
-    int inputsGot = 0;
+    AtomicInteger inputsGot = new AtomicInteger(0);
     ConcurrentLinkedQueue<String> faultySensors;
     String error;
     ConcurrentLinkedQueue<List<CloudPoint>> lastLiDarsFrame;
@@ -62,6 +61,7 @@ public class FusionSlamService extends MicroService {
 
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
             TrackedObject trackedObject = msg.tracked();
+            System.out.println(trackedObject.getDescription());
 
             statisticalFolder.addObjectsDetected(1);
             statisticalFolder.addTrackedObjects(1);
@@ -98,23 +98,30 @@ public class FusionSlamService extends MicroService {
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             faultySensors.add(c.crashed.getName());
             error = c.error;
-            while (inputsGot != camerasSum + lidarsSum)
-                try {
-                    Thread.sleep(tickTime * 1000L);
-                } catch (InterruptedException ignored) {
+
+            inputsGot.addAndGet(1);
+            notifyAll();
+            try {
+                while (inputsGot.get() != slam.numOfCams + slam.numOfLiDars) {
+                    System.out.println(inputsGot);
+                    wait();
                 }
+            } catch (InterruptedException ignored) {
+            }
             createErrorJson();
             terminate();
         });
 
         subscribeBroadcast(LastLiDarFrameBroadcast.class, (LastLiDarFrameBroadcast c) -> {
             lastLiDarsFrame.add(c.mostRecentCloudPoints);
-            inputsGot++;
+            inputsGot.addAndGet(1);
+            notifyAll();
         });
 
         subscribeBroadcast(LastCameraFrameBroadcast.class, (LastCameraFrameBroadcast c) -> {
             lastCameraFrame.add(c.lastFrame);
-            inputsGot++;
+            inputsGot.addAndGet(1);
+            notifyAll();
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
@@ -140,6 +147,7 @@ public class FusionSlamService extends MicroService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     private void createJson() {

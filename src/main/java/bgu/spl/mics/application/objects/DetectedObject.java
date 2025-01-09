@@ -20,5 +20,8 @@ public class DetectedObject {
     public String description(){
         return description;
     }
+    public String toString(){
+        return id + ": " + description;
+    }
 
 }
