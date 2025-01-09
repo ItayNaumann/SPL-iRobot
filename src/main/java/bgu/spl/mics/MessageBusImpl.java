@@ -130,9 +130,7 @@ public class MessageBusImpl implements MessageBus {
 		Message msg;
 		ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
 		do {
-			synchronized (m) {
-				msg = mServiceMsgQ.poll();
-			}
+			msg = mServiceMsgQ.poll();
 		} while (msg == null);
 
 		return msg;

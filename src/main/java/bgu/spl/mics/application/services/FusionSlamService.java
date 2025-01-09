@@ -41,7 +41,7 @@ public class FusionSlamService extends MicroService {
      *                   map.
      */
     public FusionSlamService(FusionSlam fusionSlam, String creationPath) {
-        super("Change_This_Name");
+        super("FusionSlamService");
         this.creationPath = creationPath;
         this.slam = fusionSlam;
         this.faultySensors = new ConcurrentLinkedQueue<MicroService>();

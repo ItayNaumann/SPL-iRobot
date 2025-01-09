@@ -40,7 +40,7 @@ public class LiDarService extends MicroService {
      */
     public LiDarService(LiDarWorkerTracker // changed from LiDarTracker
                                 liDarTracker, LiDarDataBase liDarDB) {
-        super("Change_This_Name");
+        super("LiDarService" + liDarTracker.id());
         this.liDar = liDarTracker;
         time = 0;
         seenQ = new ConcurrentLinkedQueue<>();

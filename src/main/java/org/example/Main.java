@@ -75,7 +75,7 @@ public class Main {
         MessageBus bus = MessageBusImpl.getInstance();
         FusionSlam slam = FusionSlam.getInstance();
         GPSIMU gpsimu = new GPSIMU(0, STATUS.UP, poseDataList);
-        List<MicroService> threads = new LinkedList<>();
+        List<MicroService> threads = new ArrayList<>();
         for (Camera c : cameras) {
             c.setCurStatus(STATUS.UP);
             c.setDetectObjectsList(camMap.get(c.getCameraKey()));
@@ -89,8 +89,11 @@ public class Main {
 
         threads.add(new FusionSlamService(slam, directoryPath));
         threads.add(new PoseService(gpsimu));
+        int counter = 0;
         for (MicroService m : threads) {
             m.run();
+            System.out.println(counter);
+            counter++;
         }
         System.out.println("threads started");
         timeService.run();
