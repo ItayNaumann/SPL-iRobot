@@ -87,6 +87,7 @@ public class LiDarService extends MicroService {
         //TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             sendBroadcast(new LastLiDarFrameBroadcast(mostRecentCloudPoints));
+
             terminate();
         });
 

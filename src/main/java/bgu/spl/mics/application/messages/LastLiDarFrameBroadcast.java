@@ -9,6 +9,7 @@ public class LastLiDarFrameBroadcast implements Broadcast {
     public final List<CloudPoint> mostRecentCloudPoints;
 
     public LastLiDarFrameBroadcast(List<CloudPoint> mostRecentCloudPoints) {
+        System.out.println("created LastLiDarFrameBroadcast");
         this.mostRecentCloudPoints = mostRecentCloudPoints;
     }
 }

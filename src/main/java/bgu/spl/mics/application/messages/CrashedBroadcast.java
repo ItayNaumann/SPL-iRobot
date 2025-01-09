@@ -9,6 +9,7 @@ public class CrashedBroadcast implements Broadcast {
     public final MicroService crashed;
 
     public CrashedBroadcast(MicroService crushed, String error) {
+        System.out.println("Crashed Broadcast: " + crushed.getName());
         this.error = error;
         this.crashed = crushed;
     }

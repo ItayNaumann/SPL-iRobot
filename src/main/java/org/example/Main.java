@@ -71,8 +71,6 @@ public class Main {
         TimeService timeService = new TimeService(tickTime, duration);
         MessageBus bus = MessageBusImpl.getInstance();
         FusionSlam slam = FusionSlam.getInstance();
-        slam.numOfCams = cameras.size();
-        slam.numOfLiDars = lidars.size();
 
         GPSIMU gpsimu = new GPSIMU(0, STATUS.UP, poseDataList);
         List<MicroService> threads = new ArrayList<>();
@@ -81,11 +79,13 @@ public class Main {
             c.setCurStatus(STATUS.UP);
             c.setDetectObjectsList(camMap.get(c.getCameraKey()));
             threads.add(new CameraService(c));
+            slam.numOfCams++;
         }
         for (LiDarWorkerTracker lwt : lidars) {
             lwt.setStatus(STATUS.UP);
             lwt.setLastTrackedObjects(new ArrayList<>());
             threads.add(new LiDarService(lwt, liDarDB));
+            slam.numOfLiDars++;
         }
         System.out.println("threads added");
 

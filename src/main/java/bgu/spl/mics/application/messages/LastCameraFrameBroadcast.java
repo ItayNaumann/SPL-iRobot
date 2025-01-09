@@ -7,6 +7,7 @@ public class LastCameraFrameBroadcast implements Broadcast {
     public final StampedDetectedObjects lastFrame;
 
     public LastCameraFrameBroadcast(StampedDetectedObjects lf) {
+        System.out.println("create last camera frame");
         lastFrame = lf;
     }
 }

@@ -61,7 +61,6 @@ public class FusionSlamService extends MicroService {
 
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
             TrackedObject trackedObject = msg.tracked();
-            System.out.println(trackedObject.getDescription());
 
             statisticalFolder.addObjectsDetected(1);
             statisticalFolder.addTrackedObjects(1);
@@ -96,40 +95,34 @@ public class FusionSlamService extends MicroService {
 
         // TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
+            System.out.println("Crashed in fs");
             faultySensors.add(c.crashed.getName());
             error = c.error;
+            inputsGot.incrementAndGet();
 
-            inputsGot.addAndGet(1);
-            notifyAll();
-            try {
-                while (inputsGot.get() != slam.numOfCams + slam.numOfLiDars) {
-                    System.out.println(inputsGot);
-                    wait();
-                }
-            } catch (InterruptedException ignored) {
-            }
-            createErrorJson();
-            terminate();
+            tryCheckout();
         });
 
         subscribeBroadcast(LastLiDarFrameBroadcast.class, (LastLiDarFrameBroadcast c) -> {
             lastLiDarsFrame.add(c.mostRecentCloudPoints);
-            inputsGot.addAndGet(1);
-            notifyAll();
+            inputsGot.incrementAndGet();
+            tryCheckout();
         });
 
         subscribeBroadcast(LastCameraFrameBroadcast.class, (LastCameraFrameBroadcast c) -> {
             lastCameraFrame.add(c.lastFrame);
-            inputsGot.addAndGet(1);
-            notifyAll();
+            inputsGot.incrementAndGet();
+            tryCheckout();
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
+            createJson();
             try {
                 Thread.sleep(tickTime * 1000L);
             } catch (InterruptedException ignored) {
             }
-            createJson();
+
+
             terminate();
         });
 
@@ -149,6 +142,24 @@ public class FusionSlamService extends MicroService {
         }
 
     }
+
+    private void tryCheckout() {
+
+        if (inputsGot.get() != slam.numOfCams + slam.numOfLiDars) {
+            System.out.println("Tried checkout " + inputsGot.get() + " " + (slam.numOfCams + slam.numOfLiDars));
+            return;
+        }
+
+        createErrorJson();
+        try {
+            Thread.sleep(tickTime * 1000L);
+        } catch (InterruptedException ignored) {
+        }
+
+        terminate();
+
+    }
+
 
     private void createJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
