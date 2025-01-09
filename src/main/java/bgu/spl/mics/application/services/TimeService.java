@@ -52,7 +52,8 @@ public class TimeService extends MicroService {
                     Thread.sleep(TickTime * 1000L);
                     timer++;
                 } else {
-                    terminate();
+                    System.out.println("Timer should stop");
+                    sendBroadcast(new TerminatedBroadcast());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

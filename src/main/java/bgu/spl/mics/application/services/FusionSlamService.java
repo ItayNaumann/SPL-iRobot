@@ -67,7 +67,9 @@ public class FusionSlamService extends MicroService {
 
             try {
                 while (trackedObject.getTime() > slam.latestPoseTime()) {
-                    wait();
+                    synchronized (this) {
+                        wait();
+                    }
                 }
                 LandMark newLandMark = slam.calcLandMark(trackedObject);
                 slam.addLandMark(newLandMark);
@@ -116,6 +118,7 @@ public class FusionSlamService extends MicroService {
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast c) -> {
+            System.out.println("Terminated in fs");
             createJson();
             try {
                 Thread.sleep(tickTime * 1000L);
