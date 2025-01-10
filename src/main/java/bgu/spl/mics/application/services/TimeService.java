@@ -38,9 +38,6 @@ public class TimeService extends MicroService {
     @Override
     protected void initialize() {
         System.out.println("TimeService started");
-        System.out.println("Timer: " + timer);
-        System.out.println("Tick: " + TickTime);
-        System.out.println("Duration: " + Duration);
         TickBroadcast b = new TickBroadcast(timer);
         subscribeBroadcast(TickBroadcast.class, c -> {
             try {

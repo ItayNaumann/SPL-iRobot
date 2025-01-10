@@ -20,7 +20,6 @@ public class LandMark {
     public void updateCoordinates(List<CloudPoint> newCoordinates) {
         for (int i = 0; i < coordinates.size(); i++) {
             CloudPoint curr = coordinates.get(i);
-            System.out.println("curr: " + curr);
             if (i >= newCoordinates.size()) {
                 continue;
             }

@@ -38,7 +38,11 @@ public class Main {
         System.out.println("config parsed");
 
         Map<String, List<StampedDetectedObjects>> camMap = new HashMap<>();
-        try (FileReader reader = new FileReader(directoryPath + (config.getCameras().getCameraDatasPath()).substring(1))) {
+        String cameraPath = config.getCameras().getCameraDatasPath();
+        if (config.getCameras().getCameraDatasPath().charAt(0) == '.'){
+            cameraPath = directoryPath + config.getCameras().getCameraDatasPath().substring(1);
+        }
+        try (FileReader reader = new FileReader(cameraPath)) {
             Type cameraMap = new TypeToken<Map<String, List<StampedDetectedObjects>>>() {
             }.getType();
             camMap = gson.fromJson(reader, cameraMap);
@@ -49,7 +53,11 @@ public class Main {
         System.out.println("cams parsed");
 
         List<Pose> poseDataList = new ArrayList<>();
-        try (FileReader reader = new FileReader(directoryPath + (config.getPoseJsonFile()).substring(1))) {
+        String posePath = config.getCameras().getCameraDatasPath();
+        if (config.getPoseJsonFile().charAt(0) == '.'){
+            posePath = directoryPath + (config.getPoseJsonFile()).substring(1);
+        }
+        try (FileReader reader = new FileReader(posePath)) {
             Type POSEList = new TypeToken<List<Pose>>() {
             }.getType();
             poseDataList = gson.fromJson(reader, POSEList);
@@ -57,8 +65,11 @@ public class Main {
             e.printStackTrace();
         }
         System.out.println("pose data parsed");
-
-        LiDarDataBase liDarDB = LiDarDataBase.getInstance(directoryPath + (config.getLidars().getLidarsDataPath()).substring(1));
+        String lidarPath = config.getLidars().getLidarsDataPath();
+        if (lidarPath.charAt(0) == '.'){
+            lidarPath = directoryPath + (lidarPath.substring(1));
+        }
+        LiDarDataBase liDarDB = LiDarDataBase.getInstance(lidarPath);
 
         System.out.println("lidar db parsed");
 
