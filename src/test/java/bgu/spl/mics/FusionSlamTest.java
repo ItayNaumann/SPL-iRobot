@@ -203,6 +203,35 @@ class FusionSlamTest {
     }
 
     @Test
+    void calcLandMark() {
+
+        Pose p1 = new Pose(-4.953, 1.3106, 144.06, 4);
+        Pose p2 = new Pose(1.2, 5.1, 85.95, 12);
+        List t1l = new ArrayList<>();
+        t1l.add(new CloudPoint(3.0451, -0.38171));
+        t1l.add(new CloudPoint(3.0637, -0.17392));
+        TrackedObject t1 = new TrackedObject("Wall_3", 4, "", t1l);
+
+        List t2l = new ArrayList<>();
+        t2l.add(new CloudPoint(3.1, -0.4));
+        t2l.add(new CloudPoint(3.2, -0.2));
+        TrackedObject t2 = new TrackedObject("Wall_3", 12, "", t2l);
+
+        FusionSlam sl = FusionSlam.getInstance();
+
+        sl.addPose(p1);
+        sl.addPose(p2);
+        sl.addLandMark(sl.calcLandMark(t1));
+
+        List<CloudPoint> lmp = new ArrayList<>();
+        lmp.add(new CloudPoint(-2.6882128166564954, 5.78546831239456));
+        lmp.add(new CloudPoint(-2.8529412210562732, 5.763747954999182));
+        LandMark l = new LandMark("Wall_3", "", lmp);
+        assertEquals(sl.addLandMark(sl.calcLandMark(t2)), l);
+
+    }
+
+    @Test
     void calcLandMarkTest3() {
 
         Pose pose1 = new Pose(1.0, 2.5, 0.0, 2);
