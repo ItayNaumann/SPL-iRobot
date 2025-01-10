@@ -1,14 +1,10 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
-import bgu.spl.mics.application.messages.LastCameraFrameBroadcast;
-import bgu.spl.mics.application.messages.LastLiDarFrameBroadcast;
-import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.services.*;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus
@@ -28,22 +24,26 @@ public class MessageBusImpl implements MessageBus {
 
     private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Class<? extends Message>>> mServiceSubs;
     private ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> mServiceMsgsQs;
-    private ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventSubsMap;
-    private ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> broadcastSubMap;
+    private ConcurrentHashMap<Class<? extends Message>, ConcurrentLinkedQueue<MicroService>> messageSubMap;
     private ConcurrentHashMap<Event, Future> eventFutureMap;
 
     private MessageBusImpl() {
         mServiceMsgsQs = new ConcurrentHashMap<>();
         mServiceSubs = new ConcurrentHashMap<>();
-        broadcastSubMap = new ConcurrentHashMap<>();
+        messageSubMap = new ConcurrentHashMap<>();
         eventFutureMap = new ConcurrentHashMap<>();
-        eventSubsMap = new ConcurrentHashMap<>();
     }
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        eventSubsMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
-        ConcurrentLinkedQueue<MicroService> subscribers = eventSubsMap.get(type);
+        messageSubMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
+        ConcurrentLinkedQueue<MicroService> subscribers = messageSubMap.get(type);
+        ConcurrentLinkedQueue<Class<? extends Message>> classes = (mServiceSubs.get(m));
+
+        synchronized (classes) {
+            classes.add(type);
+        }
+
         synchronized (type) {
             subscribers.add(m);
         }
@@ -51,8 +51,14 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        broadcastSubMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
-        ConcurrentLinkedQueue<MicroService> subscribers = broadcastSubMap.get(type);
+        messageSubMap.putIfAbsent(type, new ConcurrentLinkedQueue<>());
+        ConcurrentLinkedQueue<MicroService> subscribers = messageSubMap.get(type);
+        ConcurrentLinkedQueue<Class<? extends Message>> classes = (mServiceSubs.get(m));
+
+        synchronized (classes) {
+            classes.add(type);
+        }
+
         synchronized (type) {
             subscribers.add(m);
         }
@@ -67,8 +73,8 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        if (broadcastSubMap.containsKey(b.getClass())) {
-            ConcurrentLinkedQueue<MicroService> currMicroServices = broadcastSubMap.get(b.getClass());
+        if (messageSubMap.containsKey(b.getClass())) {
+            ConcurrentLinkedQueue<MicroService> currMicroServices = messageSubMap.get(b.getClass());
             for (MicroService m : currMicroServices) {
                 ConcurrentLinkedQueue<Message> d = mServiceMsgsQs.get(m);
                 if (d != null) {
@@ -89,7 +95,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        ConcurrentLinkedQueue<MicroService> subbedMServices = eventSubsMap.get(e.getClass());
+        ConcurrentLinkedQueue<MicroService> subbedMServices = messageSubMap.get(e.getClass());
         if (subbedMServices == null || subbedMServices.isEmpty())
             return null;
         synchronized (e.getClass()) {
@@ -124,20 +130,11 @@ public class MessageBusImpl implements MessageBus {
 
         // synchronized (m) { could also be here
         ConcurrentLinkedQueue<Class<? extends Message>> subs = mServiceSubs.get(m);
-        for (Class<? extends Message> sub : subs) {
-            if (Event.class.isInstance(sub)) {
+        for (Class<? extends Message> msg : subs) {
+            synchronized (msg) {
+                ConcurrentLinkedQueue<MicroService> broadcastSubs = messageSubMap.get(msg);
+                broadcastSubs.remove(m); // dont care about order
 
-                Class<? extends Event> eventClass = (Class<? extends Event>) sub;
-                synchronized (eventClass) {
-                    ConcurrentLinkedQueue<MicroService> eventSubs = eventSubsMap.get(eventClass);
-                    eventSubs.remove(m); // keeps the queue's order
-                }
-            } else {
-                Class<? extends Broadcast> broadcastClass = (Class<? extends Broadcast>) sub;
-                synchronized (broadcastClass) {
-                    ConcurrentLinkedQueue<MicroService> broadcastSubs = broadcastSubMap.get(broadcastClass);
-                    broadcastSubs.remove(m); // dont care about order
-                }
             }
         }
         synchronized (m) {
@@ -150,6 +147,9 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
         Message msg;
+        if (mServiceSubs.get(m).isEmpty()) {
+            throw new IllegalStateException(m.getName() + " hasn't registered!");
+        }
         ConcurrentLinkedQueue<Message> mServiceMsgQ = mServiceMsgsQs.get(m);
         return mServiceMsgQ.poll();
     }
@@ -165,13 +165,10 @@ public class MessageBusImpl implements MessageBus {
         return mServiceMsgsQs;
     }
 
-    public ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> broadcastSubMap() {
-        return broadcastSubMap;
+    public ConcurrentHashMap<Class<? extends Message>, ConcurrentLinkedQueue<MicroService>> broadcastSubMap() {
+        return messageSubMap;
     }
 
-    public ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventSubsMap() {
-        return eventSubsMap;
-    }
 
     public ConcurrentHashMap<Event, Future> eventFutureMap() {
         return eventFutureMap;

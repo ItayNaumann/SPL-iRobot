@@ -53,16 +53,17 @@ public class FusionSlam {
 
     }
 
-    public void addLandMark(LandMark newLandMark) {
+    public LandMark addLandMark(LandMark newLandMark) {
         for (LandMark landmark : landmarks) {
             if (landmark.equals(newLandMark)) {
-                newLandMark.updateCoordinates(newLandMark.getCoordinates());
-                return;
+                landmark.updateCoordinates(newLandMark.getCoordinates());
+                return landmark;
             }
         }
         synchronized (landmarks) {
             landmarks.add(newLandMark);
         }
+        return newLandMark;
     }
 
     public void addPose(Pose pose) {
