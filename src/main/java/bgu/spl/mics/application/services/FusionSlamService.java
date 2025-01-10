@@ -192,21 +192,18 @@ public class FusionSlamService extends MicroService {
         private int numDetectedObjects;
         private int numTrackedObjects;
         private int numLandmarks;
-        private List<Map<String, LandMark>> landMarks;
+        private Map<String, LandMark> landMarks;
 
         public NormalOutputFile(StatisticalFolder statisticalFolder, List<LandMark> landmarks) {
             this.systemRuntime = statisticalFolder.getNumSystemRuntime();
             this.numDetectedObjects = statisticalFolder.getNumObjectsDetected();
             this.numTrackedObjects = statisticalFolder.getNumTrackedObjects();
             this.numLandmarks = statisticalFolder.getLandMarkAmount();
-            this.landMarks = new LinkedList<>();
-            for (LandMark lm : landmarks) {
-                Map<String, LandMark> landmark = new HashMap<>();
-                landmark.put(lm.getId(), lm);
-                System.out.println(lm.getId());
-                this.landMarks.add(landmark);
-            }
 
+            this.landMarks = new HashMap<>();
+            for (LandMark lm : landmarks) {
+                this.landMarks.put(lm.getId(), lm);
+            }
         }
     }
 
