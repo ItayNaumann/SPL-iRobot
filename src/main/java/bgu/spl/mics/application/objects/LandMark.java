@@ -20,6 +20,10 @@ public class LandMark {
     public void updateCoordinates(List<CloudPoint> newCoordinates) {
         for (int i = 0; i < coordinates.size(); i++) {
             CloudPoint curr = coordinates.get(i);
+            System.out.println("curr: " + curr);
+            if (i >= newCoordinates.size()) {
+                continue;
+            }
             CloudPoint other = newCoordinates.get(i);
             synchronized (curr) {
                 curr.average(other);
@@ -31,6 +35,7 @@ public class LandMark {
     public List<CloudPoint> getCoordinates() {
         return coordinates;
     }
+
 
     public String getId() {
         return id;
@@ -46,5 +51,9 @@ public class LandMark {
             return id.equals(((LandMark) obj).getId()) && description.equals(((LandMark) obj).getDescription());
         }
         return false;
+    }
+    @Override
+    public String toString() {
+        return "LandMark [id=" + id + ", description=" + description + "]";
     }
 }

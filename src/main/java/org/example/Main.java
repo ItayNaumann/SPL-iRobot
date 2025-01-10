@@ -103,8 +103,8 @@ public class Main {
             throw new RuntimeException(e);
         }
         Thread timer = new Thread(timeService);
+        System.out.println("starting timer");
         timer.start();
-        System.out.println("timer started");
         try {
             timer.join();
             for (Thread t : Threads) {

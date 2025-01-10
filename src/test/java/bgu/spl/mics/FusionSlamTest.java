@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.objects.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests 0-3 are not that important, tests 4 and 5 are.
+ * Please take that into consideration.
+ */
 class FusionSlamTest {
 
     FusionSlam fs;
@@ -18,6 +23,41 @@ class FusionSlamTest {
     @BeforeEach
     void setUp() {
         fs = FusionSlam.getInstance();
+    }
+
+    @AfterEach
+    void tearDown() {
+        fs.cleanup();
+    }
+
+    @Test
+    void calcLandMark0() {
+
+        Pose p1 = new Pose(-4.953, 1.3106, 144.06, 4);
+        Pose p2 = new Pose(1.2, 5.1, 85.95, 12);
+        List t1l = new ArrayList<>();
+        t1l.add(new CloudPoint(3.0451, -0.38171));
+        t1l.add(new CloudPoint(3.0637, -0.17392));
+        TrackedObject t1 = new TrackedObject("Wall_3", 4, "", t1l);
+
+        List t2l = new ArrayList<>();
+        t2l.add(new CloudPoint(3.1, -0.4));
+        t2l.add(new CloudPoint(3.2, -0.2));
+        TrackedObject t2 = new TrackedObject("Wall_3", 12, "", t2l);
+
+        FusionSlam sl = FusionSlam.getInstance();
+
+        sl.addPose(p1);
+        sl.addPose(p2);
+        sl.addLandMark(sl.calcLandMark(t1));
+
+        List<CloudPoint> lmp = new ArrayList<>();
+        lmp.add(new CloudPoint(-2.6882128166564954, 5.78546831239456));
+        lmp.add(new CloudPoint(-2.8529412210562732, 5.763747954999182));
+        LandMark l = new LandMark("Wall_3", "", lmp);
+        assertEquals(sl.addLandMark(sl.calcLandMark(t2)), l);
+        System.out.println("Test 0 passed");
+
     }
 
     @Test
@@ -95,6 +135,7 @@ class FusionSlamTest {
         assertTrue(fs.calcLandMark(to1).equals(l1) & l1.getCoordinates().equals(list1));
         assertTrue(fs.calcLandMark(to2).equals(l2) & l2.getCoordinates().equals(list2));
         assertTrue(fs.calcLandMark(to3).equals(l3) & l3.getCoordinates().equals(list3));
+        System.out.println("Test 1 passed");
     }
 
     @Test
@@ -200,35 +241,7 @@ class FusionSlamTest {
         assertTrue(fs.calcLandMark(to2).equals(l2) & l2.getCoordinates().equals(list2));
         assertTrue(fs.calcLandMark(to3).equals(l3) & l3.getCoordinates().equals(list3));
         assertTrue(fs.calcLandMark(to4).equals(l4) & l4.getCoordinates().equals(list4));
-    }
-
-    @Test
-    void calcLandMark() {
-
-        Pose p1 = new Pose(-4.953, 1.3106, 144.06, 4);
-        Pose p2 = new Pose(1.2, 5.1, 85.95, 12);
-        List t1l = new ArrayList<>();
-        t1l.add(new CloudPoint(3.0451, -0.38171));
-        t1l.add(new CloudPoint(3.0637, -0.17392));
-        TrackedObject t1 = new TrackedObject("Wall_3", 4, "", t1l);
-
-        List t2l = new ArrayList<>();
-        t2l.add(new CloudPoint(3.1, -0.4));
-        t2l.add(new CloudPoint(3.2, -0.2));
-        TrackedObject t2 = new TrackedObject("Wall_3", 12, "", t2l);
-
-        FusionSlam sl = FusionSlam.getInstance();
-
-        sl.addPose(p1);
-        sl.addPose(p2);
-        sl.addLandMark(sl.calcLandMark(t1));
-
-        List<CloudPoint> lmp = new ArrayList<>();
-        lmp.add(new CloudPoint(-2.6882128166564954, 5.78546831239456));
-        lmp.add(new CloudPoint(-2.8529412210562732, 5.763747954999182));
-        LandMark l = new LandMark("Wall_3", "", lmp);
-        assertEquals(sl.addLandMark(sl.calcLandMark(t2)), l);
-
+        System.out.println("Test 2 passed");
     }
 
     @Test
@@ -287,6 +300,79 @@ class FusionSlamTest {
 
         assertTrue(fs.calcLandMark(to1).equals(l1));
         assertTrue(fs.calcLandMark(to2).equals(l2));
+        System.out.println("Test 3 passed");
     }
+
+    @Test
+    @DisplayName("LandMark appears once")
+    void calcLandMarkTest4() {
+
+        Pose pose1 = new Pose( -2.366,  0.9327, -28.08, 7);
+        fs.addPose(pose1);
+
+        TrackedObject to = new TrackedObject("Door", 7, "Door", new LinkedList<>());
+        CloudPoint p1 = new CloudPoint(0.5, -2.1);
+        CloudPoint p2 = new CloudPoint(0.8, -2.3);
+        to.getCoordinates().add(p1);
+        to.getCoordinates().add(p2);
+
+        LandMark doorLM = new LandMark("Door", "Door", new LinkedList<>());
+        CloudPoint p3 = new CloudPoint(-2.913332578606659, -1.1554635639732926);
+        CloudPoint p4 = new CloudPoint(-2.7427859966862367, -1.4731329886827864);
+        doorLM.getCoordinates().add(p3);
+        doorLM.getCoordinates().add(p4);
+        assertEquals(fs.calcLandMark(to), doorLM);
+        assertTrue(Math.abs(fs.calcLandMark(to).getCoordinates().get(0).x()-p3.x()) < 0.01);
+        assertTrue(Math.abs(fs.calcLandMark(to).getCoordinates().get(0).y()-p3.y()) < 0.01);
+        assertTrue(Math.abs(fs.calcLandMark(to).getCoordinates().get(1).x()-p4.x()) < 0.01);
+        assertTrue(Math.abs(fs.calcLandMark(to).getCoordinates().get(1).y()-p4.y()) < 0.01);
+        System.out.println("Test 4 passed");
+    }
+
+    @Test
+
+     @DisplayName("Landmark appears twice")
+
+    void calcLandMarkTest5() {
+        Pose pose1 = new Pose( -3.16,  3.1058, -28.08, 6);
+        Pose pose2 = new Pose( 5.5,  7.2, 148.91, 16);
+        fs.addPose(pose1);
+        fs.addPose(pose2);
+
+        TrackedObject to6 = new TrackedObject("Wall_4", 6, "Wall", new LinkedList<>());
+        TrackedObject to16 = new TrackedObject("Wall_4", 16, "Wall", new LinkedList<>());
+
+        CloudPoint p1 = new CloudPoint(-2.5367, -3.3341);
+        CloudPoint p2 = new CloudPoint(1.7926, -3.6804);
+        CloudPoint p3 = new CloudPoint(-2.5, -3.3);
+        CloudPoint p4 = new CloudPoint(1.8, -3.6);
+
+        to6.getCoordinates().add(p1);
+        to6.getCoordinates().add(p2);
+
+        to16.getCoordinates().add(p3);
+        to16.getCoordinates().add(p4);
+
+        LandMark wall_4 = new LandMark("Wall_4", "Wall", new LinkedList<>());
+        CloudPoint p5 = new CloudPoint(1.1887387639977982, 5.046603301251042);
+        CloudPoint p6 = new CloudPoint(1.2533775541582042, 5.113604111414717);
+
+        wall_4.getCoordinates().add(p5);
+        wall_4.getCoordinates().add(p6);
+
+        fs.addLandMark(fs.calcLandMark(to6));
+        fs.addLandMark(fs.calcLandMark(to16));
+
+        List<CloudPoint> landMarkPoints = fs.getLandmarks().get(0).getCoordinates();
+
+       assertEquals(fs.getLandmarks().get(0), wall_4);
+       assertEquals(fs.getLandmarks().size(), 1);
+        assertTrue(Math.abs(landMarkPoints.get(0).x()-p5.x()) < 0.01);
+        assertTrue(Math.abs(landMarkPoints.get(0).y()-p5.y()) < 0.01);
+        assertTrue(Math.abs(landMarkPoints.get(1).x()-p6.x()) < 0.01);
+        assertTrue(Math.abs(landMarkPoints.get(1).y()-p6.y()) < 0.01);
+        System.out.println("Test 5 passed");
+    }
+
 
 }

@@ -16,6 +16,7 @@ public class MessageBusImpl implements MessageBus {
 
     private static class MessageBusImplHolder {
         private static MessageBusImpl instance = new MessageBusImpl();
+
     }
 
     public static MessageBusImpl getInstance() {
@@ -172,5 +173,17 @@ public class MessageBusImpl implements MessageBus {
 
     public ConcurrentHashMap<Event, Future> eventFutureMap() {
         return eventFutureMap;
+    }
+
+    public ConcurrentHashMap<Class<? extends Message>, ConcurrentLinkedQueue<MicroService>> messageSubMap() {return messageSubMap;}
+
+    /**
+     * For cleanup tests
+     */
+    public void cleanup(){
+        mServiceMsgsQs.clear();
+        messageSubMap.clear();
+        mServiceSubs.clear();
+        eventFutureMap.clear();
     }
 }

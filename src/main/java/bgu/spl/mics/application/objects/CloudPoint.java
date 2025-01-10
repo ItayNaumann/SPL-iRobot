@@ -49,4 +49,16 @@ public class CloudPoint {
     public double y() {
         return y;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CloudPoint) {
+            return x == ((CloudPoint) o).x && y == ((CloudPoint) o).y;
+        }
+        return false;
+    }
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
 }

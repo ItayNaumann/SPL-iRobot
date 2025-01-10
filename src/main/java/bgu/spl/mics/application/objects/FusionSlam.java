@@ -28,7 +28,8 @@ public class FusionSlam {
 
     // Singleton instance holder
     private static class SlamHolder {
-        private static final FusionSlam slam = new FusionSlam();
+        private static FusionSlam slam = new FusionSlam();
+
     }
 
     public static FusionSlam getInstance() {
@@ -95,5 +96,16 @@ public class FusionSlam {
 
     public List<Pose> getPoses() {
         return poses;
+    }
+
+    /**
+     * For tests
+     */
+    public void cleanup(){
+        landmarks.clear();
+        poses.clear();
+        latestPose = null;
+        numOfCams = 0;
+        numOfLiDars = 0;
     }
 }
