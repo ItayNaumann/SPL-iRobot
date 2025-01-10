@@ -50,7 +50,7 @@ public class TimeService extends MicroService {
                     sendBroadcast(new TickBroadcast(timer));
                     System.out.println("Tick: " + timer);
 
-                    Thread.sleep(TickTime * 100L);
+                    Thread.sleep(TickTime * 1000L);
                 } else {
                     System.out.println("Timer should stop");
                     sendBroadcast(new TerminatedBroadcast());
