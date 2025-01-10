@@ -60,7 +60,6 @@ public class FusionSlamService extends MicroService {
         subscribeEvent(TrackedObjectsEvent.class, (TrackedObjectsEvent msg) -> {
             TrackedObject trackedObject = msg.tracked();
 
-
             if (trackedObject.getTime() > slam.latestPoseTime()) {
                 sendEvent(msg);
                 return;
@@ -86,7 +85,6 @@ public class FusionSlamService extends MicroService {
             }
         });
 
-
         // TODO: create a summarize of the output
         subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast c) -> {
             System.out.println("Crashed in fs");
@@ -110,25 +108,21 @@ public class FusionSlamService extends MicroService {
             System.out.println("Terminated in fs");
             createJson();
 
-
             terminate();
         });
 
     }
 
     private void createErrorJson() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
         statisticalFolder.setLandMarks(slam.getLandmarks());
-        ErrorOutputFile errorOutputFile = new ErrorOutputFile(error, faultySensors, lastLiDarsFrame, lastCameraFrame, slam.getPoses(), statisticalFolder);
-        System.out.println("Err 1");
+        ErrorOutputFile errorOutputFile = new ErrorOutputFile(error, faultySensors, lastLiDarsFrame, lastCameraFrame,
+                slam.getPoses(), statisticalFolder);
         try (FileWriter writer = new FileWriter(creationPath + "/OutputError.json")) {
-
-            System.out.println("Err 2");
             gson.toJson(errorOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void tryCheckout() {
@@ -141,19 +135,15 @@ public class FusionSlamService extends MicroService {
         createErrorJson();
         System.out.println("Got here 1");
 
-
         terminate();
 
     }
 
-
     private void createJson() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
         statisticalFolder.setLandMarks(slam.getLandmarks());
         NormalOutputFile normalOutputFile = new NormalOutputFile(statisticalFolder, slam.getLandmarks());
-        System.out.println("HERE 1");
-        try (FileWriter writer = new FileWriter(creationPath + "/output.json")) {
-            System.out.println("HERE 2");
+        try (FileWriter writer = new FileWriter(creationPath + "/output_file.json")) {
             gson.toJson(normalOutputFile, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -172,10 +162,10 @@ public class FusionSlamService extends MicroService {
         public ErrorOutputFile(
                 String error, ConcurrentLinkedQueue<String> faultySensors,
                 Map<String, List<TrackedObject>> lastLiDarsFrame,
-                Map<String, StampedDetectedObjects> lastCameraFrame, List<Pose> poses, StatisticalFolder statisticalFolder) {
+                Map<String, StampedDetectedObjects> lastCameraFrame, List<Pose> poses,
+                StatisticalFolder statisticalFolder) {
             this.error = error;
             this.faultySensors = Arrays.asList(faultySensors.toArray());
-
 
             this.lastLiDarWorkerTrackersFrame = lastLiDarsFrame;
 
